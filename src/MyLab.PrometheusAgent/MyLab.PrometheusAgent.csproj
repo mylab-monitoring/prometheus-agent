@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <PackageReference Include="MyLab.WebErrors" Version="1.1.3" />
+    <PackageReference Include="YamlDotNet" Version="11.2.0" />
   </ItemGroup>
 
 </Project>
