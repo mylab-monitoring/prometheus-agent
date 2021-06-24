@@ -2,14 +2,14 @@ version: '3.2'
 
 services:
   prometheus-agent-target-1:
-    container_anme: prometheus-agent-target-1
+    container_name: prometheus-agent-target-1
     image: nginx
     volumes:
     - ./target-1.conf:/etc/nginx/conf.d/default.conf
     ports:
     - "10200:80"
   prometheus-agent-target-2:
-    container_anme: prometheus-agent-target-2
+    container_name: prometheus-agent-target-2
     image: nginx
     volumes:
     - ./target-2.conf:/etc/nginx/conf.d/default.conf

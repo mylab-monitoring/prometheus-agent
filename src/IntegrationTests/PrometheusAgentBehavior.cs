@@ -23,7 +23,7 @@ namespace IntegrationTests
                 Output = output
             };
 
-            Environment.SetEnvironmentVariable("PAGENT_SCRAPE_CONFIG_APTH", "./scrape-config.yml");
+            Environment.SetEnvironmentVariable("PAGENT_SCRAPE_CONFIG_PATH", "./scrape-config.yml");
         }
 
         [Fact]
