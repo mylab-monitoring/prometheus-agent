@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
 namespace MyLab.PrometheusAgent.Controllers
@@ -15,7 +16,7 @@ namespace MyLab.PrometheusAgent.Controllers
         }
 
         [HttpGet]
-        public IActionResult Get()
+        public Task<IActionResult> Get()
         {
             return Ok();
         }
