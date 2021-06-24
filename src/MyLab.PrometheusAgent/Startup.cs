@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using MyLab.StatusProvider;
 using MyLab.WebErrors;
 
 namespace MyLab.PrometheusAgent
@@ -22,6 +23,7 @@ namespace MyLab.PrometheusAgent
         {
             services.AddLogging(c => c.AddConsole());
             services.AddControllers(c => c.AddExceptionProcessing());
+            services.AddAppStatusProviding(Configuration as IConfigurationRoot);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
