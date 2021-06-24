@@ -16,7 +16,7 @@ namespace MyLab.PrometheusAgent.Controllers
         }
 
         [HttpGet]
-        public Task<IActionResult> Get()
+        public async Task<IActionResult> Get()
         {
             return Ok();
         }

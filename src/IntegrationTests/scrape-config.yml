@@ -1,0 +1,22 @@
+﻿scrape_configs:
+
+- job_name: job1
+  static_configs:
+  - targets:
+    - localhost:10200
+    - localhost:10201
+    labels:
+      target_batch: 1
+  - targets:
+    - localhost:10200
+    - localhost:10201
+    labels:
+      target_batch: 2
+      
+- job_name: job2
+  static_configs:
+  - targets:
+    - localhost:10200
+    - localhost:10201
+    labels:
+      target_batch: 1
