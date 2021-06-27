@@ -5,10 +5,11 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Components;
 
 namespace MyLab.PrometheusAgent
 {
-    class MetricModel
+    public class MetricModel
     {
         public string Name { get; private set; }
 
@@ -17,6 +18,55 @@ namespace MyLab.PrometheusAgent
         public double Value { get; private set; }
 
         public IReadOnlyDictionary<string,string> Labels { get; private set; }
+
+        public MetricModel(string name, string type, double value, IDictionary<string,string > labels)
+        {
+            Name = name;
+            Type = type;
+            Value = value;
+            Labels = new ReadOnlyDictionary<string, string>(labels);
+        }
+
+        MetricModel()
+        {
+            
+        }
+
+        public MetricModel AddLabels(IDictionary<string, string> addLabels)
+        {
+            var newLabels = addLabels != null
+                ? Labels
+                    .Union(addLabels)
+                    .ToDictionary(
+                        itm => itm.Key,
+                        itm => itm.Value)
+                : Labels;
+            return new MetricModel
+            {
+                Name = Name,
+                Type = Type,
+                Value = Value,
+                Labels = newLabels
+            };
+        }
+
+        public async Task Write(StringWriter stringWriter)
+        {
+            await stringWriter.WriteLineAsync($"# TYPE {Name} {Type}");
+            await stringWriter.WriteAsync($"{Name} {{");
+            await stringWriter.WriteAsync(
+                string.Join(",", 
+                    Labels.Select(l => $"{l.Key}={l.Value}")
+                ));
+            await stringWriter.WriteLineAsync($"}} {Value.ToString("F2", CultureInfo.InvariantCulture)}");
+        }
+
+        public static async Task<MetricModel> Read(string str)
+        {
+            var rdr = new StringReader(str);
+
+            return await Read(rdr);
+        }
 
         public static async Task<MetricModel> Read(StringReader reader)
         {

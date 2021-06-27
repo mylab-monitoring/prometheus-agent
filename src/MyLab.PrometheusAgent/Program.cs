@@ -13,10 +13,6 @@ namespace MyLab.PrometheusAgent
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
-                .ConfigureAppConfiguration((hostingContext, configuration) =>
-                {
-                    configuration.AddEnvironmentVariables("PAGENT");
-                })
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();

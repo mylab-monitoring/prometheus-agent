@@ -7,28 +7,29 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using MyLab.Log.Dsl;
+using MyLab.Log;
 using MyLab.PrometheusAgent.Tools;
 
 namespace MyLab.PrometheusAgent.Services
 {
-    interface ITargetsMetricLoader
+    public interface ITargetsMetricProvider
     {
-        Task<TargetMetrics[]> LoadMetrics();
+        Task<TargetMetrics[]> Provide();
     }
 
-    class TargetsMetricLoader : ITargetsMetricLoader
+    class TargetsMetricProvider : ITargetsMetricProvider
     {
         private readonly IScrapeConfigProvider _scrapeConfigProvider;
         private MetricTargetsReferences _uniqueMetricTargets;
         private readonly IDslLogger _logger;
 
-        public TargetsMetricLoader(IScrapeConfigProvider scrapeConfigProvider, ILogger<TargetsMetricLoader> logger)
+        public TargetsMetricProvider(IScrapeConfigProvider scrapeConfigProvider, ILogger<TargetsMetricProvider> logger)
         {
             _scrapeConfigProvider = scrapeConfigProvider;
             _logger = logger.Dsl();
         }
 
-        public async Task<TargetMetrics[]> LoadMetrics()
+        public async Task<TargetMetrics[]> Provide()
         {
             if (_uniqueMetricTargets == null)
             {
@@ -41,8 +42,17 @@ namespace MyLab.PrometheusAgent.Services
             var loadTasks = _uniqueMetricTargets
                 .Select(async r =>
                 {
-                    var m= await RequestMetrics(r);
-                    targetMetrics.Add(m);
+                    try
+                    {
+                        var m= await RequestMetrics(r);
+                        targetMetrics.Add(m);
+                    }
+                    catch (Exception e)
+                    { 
+                        _logger.Error(e)
+                            .AndFactIs("target", r.Id)
+                            .Write();
+                    }
                 })
                 .ToArray();
 
@@ -61,7 +71,7 @@ namespace MyLab.PrometheusAgent.Services
 
         private async Task<TargetMetrics> RequestMetrics(MetricTargetReference arg)
         {
-            var response = await arg.Client.GetAsync("");
+            var response = await arg.Client.GetAsync("metrics");
 
             var result = new TargetMetrics
             {
@@ -86,25 +96,21 @@ namespace MyLab.PrometheusAgent.Services
                 }
                 catch (Exception e)
                 {
-                    _logger.Error("Metrics parsing error", e)
-                        .AndFactIs("target", arg.Id)
-                        .Write();
+                    throw new InvalidOperationException("Metrics parsing error", e);
                 }
                 
             }
             else
             {
-                _logger.Error("Metric target return bad response")
-                    .AndFactIs("http-code", $"{(int)response.StatusCode}({response.ReasonPhrase})")
-                    .AndFactIs("target", arg.Id)
-                    .Write();
+                throw new InvalidOperationException("Metric target return bad response")
+                    .AndFactIs("http-code", $"{(int) response.StatusCode}({response.ReasonPhrase})");
             }
 
             return result;
         }
     }
 
-    class TargetMetrics
+    public class TargetMetrics
     {
         public string Id { get; set; }
         public MetricModel[] Metrics { get; set; }

@@ -42,7 +42,7 @@ namespace IntegrationTests
             if(!bodyString.StartsWith(metric.Name))
                 throw new FormatException("Body string has wrong name");
 
-            if (!bodyString.StartsWith(metric.Name + "{"))
+            if (!bodyString.StartsWith(metric.Name + " {"))
                 throw new FormatException("Body string has wrong start");
 
             var labelsStart = bodyString.IndexOf('{');
@@ -52,7 +52,7 @@ namespace IntegrationTests
                 throw new FormatException("Cant detect levels");
 
             var labels = bodyString
-                .Substring(labelsStart + 1, labelsEnd - labelsStart)
+                .Substring(labelsStart + 1, labelsEnd - labelsStart-1)
                 .Split(',')
                 .Select(v => new { Value = v, SplitPos = v.IndexOf('=')})
                 .ToDictionary(v => v.Value.Remove(v.SplitPos), v => v.Value.Substring(v.SplitPos+1).Trim('\"'));

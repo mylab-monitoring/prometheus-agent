@@ -26,6 +26,10 @@ namespace MyLab.PrometheusAgent
             services.AddControllers(c => c.AddExceptionProcessing());
             services.AddAppStatusProviding(Configuration as IConfigurationRoot);
             services.AddSingleton<IScrapeConfigProvider, ScrapeConfigProvider>();
+            services.AddSingleton<ITargetsMetricProvider, TargetsMetricProvider>();
+            services.AddSingleton<IMetricReportBuilder, MetricReportBuilder>();
+            services.Configure<PrometheusAgentOptions>(Configuration.GetSection("PROMETHEUS_AGENT"));
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

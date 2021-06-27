@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using MyLab.PrometheusAgent.Tools;
@@ -28,7 +29,12 @@ namespace MyLab.PrometheusAgent.Services
 
         public async Task<ScrapeConfig> Provide()
         {
-            return _scrapeConfig ??= ScrapeConfig.Parse(await File.ReadAllTextAsync(_options.ScrapeConfigPath));
+            if(string.IsNullOrEmpty(_options.Config))
+                throw new InvalidOperationException("Scrape config path is not configured");
+            if (!File.Exists(_options.Config))
+                throw new InvalidOperationException("Scrape config path does not exists");
+
+            return _scrapeConfig ??= ScrapeConfig.Parse(await File.ReadAllTextAsync(_options.Config));
         }
     }
 }

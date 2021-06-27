@@ -2,6 +2,6 @@
 {
     public class PrometheusAgentOptions
     {
-        public string ScrapeConfigPath { get; set; }
+        public string Config { get; set; }
     }
 }
