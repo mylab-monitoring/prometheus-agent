@@ -19,11 +19,15 @@ namespace UnitTests
         }
 
         [Theory]
-        [InlineData("# TYPE foo_metric gauge\nfoo_metric{label1=\"value1\",label2=\"value2\"} 1.1", null)]
-        [InlineData("# TYPE foo_metric gauge\nfoo_metric { label1 = \"value1\" , label2 = \"value2\" } 1.1", null)]
-        [InlineData("# TYPE foo_metric gauge\nfoo_metric{label1=\"value1\",label2=\"value2\"} 1.1 1624868358000", "28.06.2021 08:19:18")]
-        [InlineData("# TYPE foo_metric gauge\nfoo_metric { label1 = \"value1\" , label2 = \"value2\" } 1.1 1624868358000", "28.06.2021 08:19:18")]
-        public async Task ShouldRead(string metricString, string dateTime)
+        [InlineData("foo_metric{label1=\"value1\",label2=\"value2\"} 1.1", null, false)]
+        [InlineData("foo_metric { label1 = \"value1\" , label2 = \"value2\" } 1.1", null, false)]
+        [InlineData("foo_metric{label1=\"value1\",label2=\"value2\"} 1.1 1624868358000", "28.06.2021 08:19:18", false)]
+        [InlineData("foo_metric { label1 = \"value1\" , label2 = \"value2\" } 1.1 1624868358000", "28.06.2021 08:19:18", false)]
+        [InlineData("# TYPE foo_metric gauge\nfoo_metric{label1=\"value1\",label2=\"value2\"} 1.1", null, true)]
+        [InlineData("# TYPE foo_metric gauge\nfoo_metric { label1 = \"value1\" , label2 = \"value2\" } 1.1", null, true)]
+        [InlineData("# TYPE foo_metric gauge\nfoo_metric{label1=\"value1\",label2=\"value2\"} 1.1 1624868358000", "28.06.2021 08:19:18", true)]
+        [InlineData("# TYPE foo_metric gauge\nfoo_metric { label1 = \"value1\" , label2 = \"value2\" } 1.1 1624868358000", "28.06.2021 08:19:18", true)]
+        public async Task ShouldRead(string metricString, string dateTime, bool hasType)
         {
             //Arrange
             var reader =  new StringReader(metricString);
@@ -38,7 +42,6 @@ namespace UnitTests
 
             //Assert
             Assert.Equal("foo_metric", metric.Name);
-            Assert.Equal("gauge", metric.Type);
             Assert.Equal(2, metric.Labels.Count);
             Assert.Equal("value1", metric.Labels["label1"]);
             Assert.Equal("value2", metric.Labels["label2"]);
@@ -49,6 +52,47 @@ namespace UnitTests
                 var timeStampFromEpoch = expectedDateTime.Value - new DateTime(1970, 1, 1);
                 Assert.Equal(timeStampFromEpoch.TotalMilliseconds, metric.TimeStamp.Value);
             }
+
+            if(hasType)
+                Assert.Equal("gauge", metric.Type);
+            else
+            {
+                Assert.Null(metric.Type);
+            }
+        }
+
+        [Fact]
+        public async Task ShouldReadMetricsWithoutBody()
+        {
+            //Arrange
+            var reader=  new StringReader("# TYPE foo_metric gauge");
+
+            //Act
+            var metric = await MetricModel.ReadAsync(reader);
+
+            //Assert
+            Assert.Equal("foo_metric", metric.Name);
+            Assert.Equal("gauge", metric.Type);
+            Assert.Null(metric.TimeStamp);
+            Assert.Null(metric.Labels);
+            Assert.Equal(0, metric.Value);
+        }
+
+        [Fact]
+        public async Task ShouldReadSimpleMetrics()
+        {
+            //Arrange
+            var reader = new StringReader("dotnet_total_memory_bytes 6308464");
+            
+            //Act
+            var metric = await MetricModel.ReadAsync(reader);
+            
+            //Assert
+            Assert.Equal("dotnet_total_memory_bytes", metric.Name);
+            Assert.Null(metric.Labels);
+            Assert.Equal(6308464d, metric.Value);
+            Assert.Null(metric.Type);
+            Assert.Null(metric.TimeStamp);
         }
 
         [Theory]

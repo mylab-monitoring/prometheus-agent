@@ -45,7 +45,9 @@ namespace MyLab.PrometheusAgent.Services
                     try
                     {
                         var m= await RequestMetrics(r);
-                        targetMetrics.Add(m);
+
+                        if(m != null)
+                            targetMetrics.Add(m);
                     }
                     catch (Exception e)
                     { 
@@ -71,7 +73,18 @@ namespace MyLab.PrometheusAgent.Services
 
         private async Task<TargetMetrics> RequestMetrics(MetricTargetReference arg)
         {
-            var response = await arg.Client.GetAsync("metrics");
+            HttpResponseMessage response;
+
+            try
+            {
+                response = await arg.Client.GetAsync("metrics");
+            }
+            catch (HttpRequestException e) when (e.Message.StartsWith("Name or service not known"))
+            {
+                _logger.Warning(e).AndFactIs("target", arg.Id);
+
+                return null;
+            }
 
             var result = new TargetMetrics
             {
@@ -102,8 +115,9 @@ namespace MyLab.PrometheusAgent.Services
             }
             else
             {
-                throw new InvalidOperationException("Metric target return bad response")
-                    .AndFactIs("http-code", $"{(int) response.StatusCode}({response.ReasonPhrase})");
+                _logger.Warning("Metric target return bad response")
+                    .AndFactIs("http-code", $"{(int) response.StatusCode}({response.ReasonPhrase})")
+                    .AndFactIs("target", arg.Id);
             }
 
             return result;
