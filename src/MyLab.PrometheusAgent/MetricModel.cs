@@ -66,7 +66,7 @@ namespace MyLab.PrometheusAgent
             await stringWriter.WriteAsync($"{Name} {{");
             await stringWriter.WriteAsync(
                 string.Join(",", 
-                    Labels.Select(l => $"{l.Key}={l.Value}")
+                    Labels.Select(l => $"{l.Key}=\"{l.Value}\"")
                 ));
             await stringWriter.WriteAsync("} ");
             await stringWriter.WriteAsync(Value.ToString("F2", CultureInfo.InvariantCulture));
