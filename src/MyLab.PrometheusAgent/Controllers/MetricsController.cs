@@ -31,7 +31,7 @@ namespace MyLab.PrometheusAgent.Controllers
 
             foreach (var metric in report)
             {
-                await metric.Write(resultWriter);
+                await metric.WriteAsync(resultWriter);
             }
 
             return Ok(resultBuilder.ToString());

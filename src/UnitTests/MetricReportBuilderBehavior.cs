@@ -75,7 +75,7 @@ namespace UnitTests
                         Id = "localhost:123",
                         Metrics = new []
                         {
-                            await MetricModel.Read("# TYPE foo_metric gauge\nfoo_metric{label1=\"value1\",label2=\"value2\"} 1.1")
+                            await MetricModel.ReadAsync("# TYPE foo_metric gauge\nfoo_metric{label1=\"value1\",label2=\"value2\"} 1.1")
                         }
                     }, 
                 };

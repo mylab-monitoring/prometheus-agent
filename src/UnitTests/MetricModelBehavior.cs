@@ -33,7 +33,7 @@ namespace UnitTests
                 expectedDateTime = DateTime.Parse(dateTime);
 
             //Act
-            var metric = await MetricModel.Read(reader);
+            var metric = await MetricModel.ReadAsync(reader);
 
 
             //Assert
@@ -77,12 +77,12 @@ namespace UnitTests
             var stringWriter = new StringWriter(metricStringBuilder);
 
             //Act
-            await originalMetric.Write(stringWriter);
+            await originalMetric.WriteAsync(stringWriter);
 
             var metricString = metricStringBuilder.ToString();
             _output.WriteLine(metricString);
 
-            var actualMetric = await MetricModel.Read(metricString);
+            var actualMetric = await MetricModel.ReadAsync(metricString);
 
             //Assert
             Assert.Equal(originalMetric.Name, actualMetric.Name);
@@ -93,6 +93,23 @@ namespace UnitTests
 
             if(dateTime.HasValue)
                 Assert.Equal(dateTime, new DateTime(1970, 1, 1).AddMilliseconds(actualMetric.TimeStamp.Value));
+        }
+
+        [Fact]
+        public async Task ShouldParseRealMetrics()
+        {
+            //Arrange
+            var realMetricsString = await File.ReadAllTextAsync("docker-peeker-metrics.txt");
+            var rdr = new StringReader(realMetricsString);
+
+            //Act
+            while (rdr.Peek() != -1)
+            {
+                await MetricModel.ReadAsync(rdr);
+            }
+
+            //Assert
+
         }
     }
 }

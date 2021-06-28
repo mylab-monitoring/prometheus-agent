@@ -176,7 +176,7 @@ namespace IntegrationTests
 
             while (reader.Peek() != -1)
             {
-                metrics.Add(await MetricModel.Read(reader));
+                metrics.Add(await MetricModel.ReadAsync(reader));
             }
 
             return metrics.ToArray();

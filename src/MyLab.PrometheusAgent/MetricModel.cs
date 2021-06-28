@@ -60,7 +60,7 @@ namespace MyLab.PrometheusAgent
             };
         }
 
-        public async Task Write(StringWriter stringWriter)
+        public async Task WriteAsync(StringWriter stringWriter)
         {
             await stringWriter.WriteLineAsync($"# TYPE {Name} {Type}");
             await stringWriter.WriteAsync($"{Name} {{");
@@ -77,18 +77,24 @@ namespace MyLab.PrometheusAgent
             await stringWriter.WriteLineAsync();
         }
 
-        public static async Task<MetricModel> Read(string str)
+        public static async Task<MetricModel> ReadAsync(string str)
         {
             var rdr = new StringReader(str);
 
-            return await Read(rdr);
+            return await ReadAsync(rdr);
         }
 
-        public static async Task<MetricModel> Read(StringReader reader)
+        public static async Task<MetricModel> ReadAsync(StringReader reader)
         {
-            var typeString = await reader.ReadLineAsync();
+            string typeString;
+            var helpString = await reader.ReadLineAsync();
 
-            if(string.IsNullOrEmpty(typeString))
+            if (helpString != null && helpString.StartsWith("# TYPE "))
+                typeString = helpString;
+            else
+                typeString = await reader.ReadLineAsync();
+
+            if (string.IsNullOrEmpty(typeString))
                 throw new FormatException("Type string is empty");
             if(!typeString.StartsWith("# TYPE "))
                 throw new FormatException("Type string start");

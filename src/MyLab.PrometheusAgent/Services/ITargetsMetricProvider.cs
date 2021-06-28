@@ -89,7 +89,7 @@ namespace MyLab.PrometheusAgent.Services
 
                     while (reader.Peek() != -1)
                     {
-                        metrics.Add(await MetricModel.Read(reader));
+                        metrics.Add(await MetricModel.ReadAsync(reader));
                     }
 
                     result.Metrics = metrics.ToArray();
