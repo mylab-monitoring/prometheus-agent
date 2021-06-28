@@ -1,5 +1,5 @@
 # MyLab.PrometheusAgent
-[![Docker image](https://img.shields.io/docker/v/mylabtools/oprometheus-agent?label=Docker%20image)](https://hub.docker.com/r/mylabtools/oprometheus-agent)
+[![Docker image](https://img.shields.io/docker/v/mylabtools/prometheus-agent?label=Docker%20image)](https://hub.docker.com/r/mylabtools/prometheus-agent)
 
 Ознакомьтесь с последними изменениями в [журнале изменений](/changelog.md).
 
@@ -59,3 +59,28 @@ scrape_configs:
 
 * таймаут сбора всех метрик - 20 сек
 * таймаут сбора метрик с одного подключения - 15 сек
+* путь сборки метрик - `/metrics`
+
+## Развёртывание
+
+Сервис адаптирован для развёртывания на `docker`. При этом потребуется:
+
+* подклчить конфиг сбора метрик;
+* указать путь к нему через переменную окружения `PROMETHEUS_AGENT__CONFIG`.
+
+Пример docker-compose файла:
+
+```yaml
+version: '3.2'
+
+services:
+  prometheus-agent:
+    image: mylabtools/prometheus-agent
+	container_name: prometheus-agent
+    volumes:
+    - ./scrape_config.yml:/scrape_config.yml
+    environment:
+    - PROMETHEUS_AGENT__CONFIG=/scrape_config.yml
+    
+```
+
