@@ -38,6 +38,7 @@ namespace IntegrationTests
             //Arrange
             Environment.SetEnvironmentVariable("PROMETHEUS_AGENT__CONFIG", "./scrape-config.yml");
             var agent = _api.StartWithProxy();
+            var originTimeStamp = (long)(new DateTime(2021,6,28,8,19,18) - new DateTime(1970,1,1)).TotalMilliseconds;
 
             //Act
             var metricsString = await agent.GetMetrics();
@@ -62,12 +63,14 @@ namespace IntegrationTests
             Assert.Equal(5, job1Batch1Metric1.Labels.Count);
             Assert.Equal("value1", job1Batch1Metric1.Labels["label1"]);
             Assert.Equal("value2", job1Batch1Metric1.Labels["label2"]);
+            Assert.Null(job1Batch1Metric1.TimeStamp);
 
             Assert.NotNull(job1Batch1Metric2);
             Assert.Equal("counter", job1Batch1Metric2.Type);
             Assert.Equal(5, job1Batch1Metric2.Labels.Count);
             Assert.Equal("value3", job1Batch1Metric2.Labels["label3"]);
             Assert.Equal("value4", job1Batch1Metric2.Labels["label4"]);
+            Assert.Equal(originTimeStamp, job1Batch1Metric2.TimeStamp);
 
             var job1Batch2Metric1 = metrics.FirstOrDefault(m =>
                 m.Name == "foo_metric" &&
@@ -86,6 +89,7 @@ namespace IntegrationTests
             Assert.Equal(5, job1Batch2Metric1.Labels.Count);
             Assert.Equal("value1", job1Batch2Metric1.Labels["label1"]);
             Assert.Equal("value2", job1Batch2Metric1.Labels["label2"]);
+            Assert.Null(job1Batch2Metric1.TimeStamp);
 
             Assert.NotNull(job1Batch2Metric2);
             Assert.Equal("counter", job1Batch2Metric2.Type);
@@ -93,6 +97,7 @@ namespace IntegrationTests
             Assert.Equal(5, job1Batch2Metric2.Labels.Count);
             Assert.Equal("value3", job1Batch2Metric2.Labels["label3"]);
             Assert.Equal("value4", job1Batch2Metric2.Labels["label4"]);
+            Assert.Equal(originTimeStamp, job1Batch2Metric2.TimeStamp);
 
             var job2Batch1Metric1 = metrics.FirstOrDefault(m =>
                 m.Name == "foo_metric" &&
@@ -109,6 +114,7 @@ namespace IntegrationTests
             Assert.Equal("value1", job2Batch1Metric1.Labels["label1"]);
             Assert.Equal("value2", job2Batch1Metric1.Labels["label2"]);
             Assert.Equal("1", job2Batch1Metric1.Labels["target_batch"]);
+            Assert.Null(job2Batch1Metric1.TimeStamp);
 
             Assert.NotNull(job2Batch1Metric2);
             Assert.Equal("counter", job2Batch1Metric2.Type);
@@ -116,6 +122,7 @@ namespace IntegrationTests
             Assert.Equal("value3", job2Batch1Metric2.Labels["label3"]);
             Assert.Equal("value4", job2Batch1Metric2.Labels["label4"]);
             Assert.Equal("1", job2Batch1Metric2.Labels["target_batch"]);
+            Assert.Equal(originTimeStamp, job2Batch1Metric2.TimeStamp);
         }
 
         [Fact]

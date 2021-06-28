@@ -5,7 +5,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Components;
 
 namespace MyLab.PrometheusAgent
 {
@@ -17,14 +16,24 @@ namespace MyLab.PrometheusAgent
 
         public double Value { get; private set; }
 
+        public long? TimeStamp { get; private set; }
+
         public IReadOnlyDictionary<string,string> Labels { get; private set; }
 
-        public MetricModel(string name, string type, double value, IDictionary<string,string > labels)
+        public MetricModel(string name, string type, double value, DateTime? timeStamp, IDictionary<string,string > labels)
         {
+            
+
             Name = name;
             Type = type;
             Value = value;
             Labels = new ReadOnlyDictionary<string, string>(labels);
+
+            if (timeStamp.HasValue)
+            {
+                var timeStampFromEpoch = timeStamp.Value - new DateTime(1970, 1, 1);
+                TimeStamp = (long) timeStampFromEpoch.TotalMilliseconds;
+            }
         }
 
         MetricModel()
@@ -46,6 +55,7 @@ namespace MyLab.PrometheusAgent
                 Name = Name,
                 Type = Type,
                 Value = Value,
+                TimeStamp = TimeStamp,
                 Labels = newLabels
             };
         }
@@ -58,7 +68,13 @@ namespace MyLab.PrometheusAgent
                 string.Join(",", 
                     Labels.Select(l => $"{l.Key}={l.Value}")
                 ));
-            await stringWriter.WriteLineAsync($"}} {Value.ToString("F2", CultureInfo.InvariantCulture)}");
+            await stringWriter.WriteAsync("} ");
+            await stringWriter.WriteAsync(Value.ToString("F2", CultureInfo.InvariantCulture));
+
+            if (TimeStamp.HasValue)
+                await stringWriter.WriteAsync(" " + TimeStamp.Value);
+
+            await stringWriter.WriteLineAsync();
         }
 
         public static async Task<MetricModel> Read(string str)
@@ -112,9 +128,23 @@ namespace MyLab.PrometheusAgent
             metric.Labels = new ReadOnlyDictionary<string, string>(labels);
 
             var valueString = bodyString.Substring(labelsEnd + 1).Trim();
-            
-            if(!double.TryParse(valueString, NumberStyles.Any, CultureInfo.InvariantCulture, out var value))
-                throw new FormatException($"Value has wrong format: '{valueString}'");
+
+            var valueParts = valueString.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+            if(valueParts.Length == 0)
+                throw new FormatException($"Value parts not found in body string '{bodyString}'");
+            if (valueParts.Length > 2)
+                throw new FormatException($"Too many value parts ({valueParts.Length}) in body string '{bodyString}'");
+
+            if (!double.TryParse(valueParts[0], NumberStyles.Any, CultureInfo.InvariantCulture, out var value))
+                throw new FormatException($"Value has wrong format: '{valueParts[0]}'");
+
+            if (valueParts.Length == 2)
+            {
+                if (!long.TryParse(valueParts[1], NumberStyles.Any, CultureInfo.InvariantCulture, out var timeStamp))
+                    throw new FormatException($"Time stemp has wrong format: '{valueParts[1]}'");
+                metric.TimeStamp = timeStamp;
+            }
 
             metric.Value = value;
 
