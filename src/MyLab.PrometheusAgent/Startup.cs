@@ -30,6 +30,9 @@ namespace MyLab.PrometheusAgent
             services.AddSingleton<IMetricReportBuilder, MetricReportBuilder>();
             services.Configure<PrometheusAgentOptions>(Configuration.GetSection("PROMETHEUS_AGENT"));
 
+#if DEBUG
+            services.Configure<ExceptionProcessingOptions>(o => o.HideError = false);
+#endif
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

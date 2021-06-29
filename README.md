@@ -24,6 +24,65 @@
 | MyLab.PrometheusAgent | до 290 Mb          | ~0.1%                  |
 | Prometheus            | ~1.16 Gb           | ~20%                   |
 
+## API
+
+### GET /metrics
+
+Возвращает собранные метрики
+
+Пример:
+
+```http
+200 OK
+
+Content-Type: text/plain; charset=utf-8
+
+# TYPE bar_metric counter
+bar_metric {label3="value3",label4="value4",target_batch="1",instance="localhost:10201",job="job1"} 2.20 1624868358000
+# TYPE foo_metric gauge
+foo_metric {label1="value1",label2="value2",target_batch="1",instance="localhost:10200",job="job1"} 1.10
+# TYPE bar_metric counter
+bar_metric {label3="value3",label4="value4",target_batch="2",instance="localhost:10201",job="job1"} 2.20 1624868358000
+# TYPE foo_metric gauge
+foo_metric {label1="value1",label2="value2",target_batch="2",instance="localhost:10200",job="job1"} 1.10
+# TYPE bar_metric counter
+bar_metric {label3="value3",label4="value4",target_batch="1",instance="localhost:10201",job="job2"} 2.20 1624868358000
+# TYPE foo_metric gauge
+foo_metric {label1="value1",label2="value2",target_batch="1",instance="localhost:10200",job="job2"} 1.10
+```
+
+### GET /config
+
+Возвращает конфигурацию сбора метрик в `JSON` представлении.
+
+Пример:
+
+```http
+200 OK
+
+Content-Type: application/json; charset=utf-8
+Content-Length: 290
+
+{
+  "Items": [
+    {
+      "JobName": "job1",
+      "StaticConfigs": [
+        {
+          "Targets": [
+            "localhost:10200",
+            "localhost:10201"
+          ],
+          "Labels": {
+            "target_batch": "1"
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
 ## Конфигурация
 
 ### ScrapeConfig
