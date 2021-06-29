@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using MyLab.ApiClient;
 using MyLab.ApiClient.Test;
 using MyLab.PrometheusAgent;
+using MyLab.PrometheusAgent.Services;
 using MyLab.PrometheusAgent.Tools;
 using MyLab.WebErrors;
 using Xunit;
@@ -190,6 +191,36 @@ namespace IntegrationTests
             Assert.Equal("1", cfg.Items[0].StaticConfigs[0].Labels["target_batch"]);
         }
 
+        [Fact]
+        public async Task ShouldProvideReport()
+        {
+            //Arrange
+            Environment.SetEnvironmentVariable("PROMETHEUS_AGENT__CONFIG", "./scrape-config-min.yml");
+            var agent = _api.StartWithProxy();
+            await agent.GetMetrics();
+
+            //Act
+            var report = await agent.GetReport();
+
+            var report1 = report?.FirstOrDefault(r => r.Id == "localhost:10200");
+            var report2 = report?.FirstOrDefault(r => r.Id == "localhost:10201");
+
+            //Assert
+            Assert.NotNull(report1);
+            Assert.True(DateTime.Now.AddSeconds(-10) < report1.Dt);
+            Assert.Null(report1.Error);
+            Assert.True(70 < report1.ResponseVolume && report1.ResponseVolume < 80);
+            Assert.Equal(1, report1.MetricsCount);
+            Assert.True(report1.Duration < TimeSpan.FromSeconds(1));
+
+            Assert.NotNull(report2);
+            Assert.True(DateTime.Now.AddSeconds(-10) < report2.Dt);
+            Assert.Null(report2.Error);
+            Assert.True(80 < report2.ResponseVolume && report2.ResponseVolume < 90);
+            Assert.Equal(1, report2.MetricsCount);
+            Assert.True(report1.Duration < TimeSpan.FromSeconds(1));
+        }
+
         async Task<MetricModel[]> ReadMetrics(string stringSource)
         {
             if (string.IsNullOrEmpty(stringSource))
@@ -221,5 +252,8 @@ namespace IntegrationTests
 
         [Get("config")]
         Task<ScrapeConfig> GetConfig();
+
+        [Get("report")]
+        Task<TargetsReportItem[]> GetReport();
     }
 }

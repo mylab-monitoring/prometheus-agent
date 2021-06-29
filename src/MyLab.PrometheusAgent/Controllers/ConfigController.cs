@@ -25,7 +25,7 @@ namespace MyLab.PrometheusAgent.Controllers
         {
             var scrapeConfig = await _scrapeConfigProvider.Provide();
 
-            var json = JsonConvert.SerializeObject(scrapeConfig, Formatting.Indented);
+            var json = JsonConvert.SerializeObject(scrapeConfig);
 
             return base.Content(json, "application/json", Encoding.UTF8);
         }

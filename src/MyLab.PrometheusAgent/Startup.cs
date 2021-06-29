@@ -28,6 +28,7 @@ namespace MyLab.PrometheusAgent
             services.AddSingleton<IScrapeConfigProvider, ScrapeConfigProvider>();
             services.AddSingleton<ITargetsMetricProvider, TargetsMetricProvider>();
             services.AddSingleton<IMetricReportBuilder, MetricReportBuilder>();
+            services.AddSingleton<TargetsReportService>();
             services.Configure<PrometheusAgentOptions>(Configuration.GetSection("PROMETHEUS_AGENT"));
 
 #if DEBUG

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -20,12 +21,17 @@ namespace MyLab.PrometheusAgent.Services
     class TargetsMetricProvider : ITargetsMetricProvider
     {
         private readonly IScrapeConfigProvider _scrapeConfigProvider;
+        private readonly TargetsReportService _targetsReportService;
         private MetricTargetsReferences _uniqueMetricTargets;
         private readonly IDslLogger _logger;
 
-        public TargetsMetricProvider(IScrapeConfigProvider scrapeConfigProvider, ILogger<TargetsMetricProvider> logger)
+        public TargetsMetricProvider(
+            IScrapeConfigProvider scrapeConfigProvider, 
+            TargetsReportService targetsReportService,
+            ILogger<TargetsMetricProvider> logger)
         {
             _scrapeConfigProvider = scrapeConfigProvider;
+            _targetsReportService = targetsReportService;
             _logger = logger.Dsl();
         }
 
@@ -42,19 +48,32 @@ namespace MyLab.PrometheusAgent.Services
             var loadTasks = _uniqueMetricTargets
                 .Select(async r =>
                 {
+                    var reportItem = new TargetsReportItem
+                    {
+                        Id = r.Id,
+                        Dt = DateTime.Now
+                    };
+
                     try
                     {
-                        var m= await RequestMetrics(r);
+                        var m= await RequestMetrics(r, reportItem);
 
-                        if(m != null)
+                        if (m != null)
+                        {
+                            reportItem.MetricsCount = m.Metrics.Length;
                             targetMetrics.Add(m);
+                        }
                     }
                     catch (Exception e)
                     { 
+                        reportItem.Error = ExceptionDto.Create(e);
+
                         _logger.Error(e)
                             .AndFactIs("target", r.Id)
                             .Write();
                     }
+
+                    _targetsReportService.Report(reportItem);
                 })
                 .ToArray();
 
@@ -71,19 +90,22 @@ namespace MyLab.PrometheusAgent.Services
             return targetMetrics.ToArray();
         }
 
-        private async Task<TargetMetrics> RequestMetrics(MetricTargetReference arg)
+        private async Task<TargetMetrics> RequestMetrics(MetricTargetReference arg, TargetsReportItem reportItem)
         {
             HttpResponseMessage response;
+
+            var sw = new Stopwatch();
+            sw.Start();
 
             try
             {
                 response = await arg.Client.GetAsync("metrics");
+                reportItem.ResponseVolume = response.Content.Headers.ContentLength.GetValueOrDefault(-1);
             }
-            catch (HttpRequestException e) when (e.Message.StartsWith("Name or service not known"))
+            finally
             {
-                _logger.Warning(e).AndFactIs("target", arg.Id);
-
-                return null;
+                sw.Stop();
+                reportItem.Duration = sw.Elapsed;
             }
 
             var result = new TargetMetrics
@@ -115,9 +137,8 @@ namespace MyLab.PrometheusAgent.Services
             }
             else
             {
-                _logger.Warning("Metric target return bad response")
-                    .AndFactIs("http-code", $"{(int) response.StatusCode}({response.ReasonPhrase})")
-                    .AndFactIs("target", arg.Id);
+                throw new InvalidOperationException("Metric target return bad response")
+                    .AndFactIs("http-code", $"{(int) response.StatusCode}({response.ReasonPhrase})");
             }
 
             return result;

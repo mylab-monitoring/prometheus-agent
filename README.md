@@ -28,15 +28,11 @@
 
 ### GET /metrics
 
-Возвращает собранные метрики
+Возвращает собранные метрики.
 
 Пример:
 
-```http
-200 OK
-
-Content-Type: text/plain; charset=utf-8
-
+```
 # TYPE bar_metric counter
 bar_metric {label3="value3",label4="value4",target_batch="1",instance="localhost:10201",job="job1"} 2.20 1624868358000
 # TYPE foo_metric gauge
@@ -57,12 +53,7 @@ foo_metric {label1="value1",label2="value2",target_batch="1",instance="localhost
 
 Пример:
 
-```http
-200 OK
-
-Content-Type: application/json; charset=utf-8
-Content-Length: 290
-
+```json
 {
   "Items": [
     {
@@ -81,6 +72,33 @@ Content-Length: 290
     }
   ]
 }
+```
+
+### GET /report
+
+Возвращает отчёт об опросах целевых сервисов.
+
+Пример:
+
+```json
+[
+  {
+    "Id": "localhost:10201",
+    "Dt": "2021-06-29T12:13:29.0932695+03:00",
+    "Duration": "00:00:00.0113103",
+    "Error": null,
+    "ResponseVolume": 87,
+    "MetricsCount": 1
+  },
+  {
+    "Id": "localhost:10200",
+    "Dt": "2021-06-29T12:13:29.0435334+03:00",
+    "Duration": "00:00:00.0596145",
+    "Error": null,
+    "ResponseVolume": 71,
+    "MetricsCount": 1
+  }
+]
 ```
 
 ## Конфигурация
