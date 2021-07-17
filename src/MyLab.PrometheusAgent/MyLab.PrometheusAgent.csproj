@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <PackageReference Include="MyLab.Log" Version="3.1.5" />
+    <PackageReference Include="MyLab.Log.Dsl" Version="3.1.2" />
     <PackageReference Include="MyLab.StatusProvider" Version="1.5.9" />
     <PackageReference Include="MyLab.WebErrors" Version="1.1.3" />
     <PackageReference Include="YamlDotNet" Version="11.2.0" />
