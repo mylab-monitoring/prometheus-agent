@@ -12,7 +12,7 @@ namespace MyLab.PrometheusAgent.Tools
         {
         }
 
-        public static MetricTargetsReferences LoadUniqueScrapeConfig(ScrapeConfig scrapeConfig)
+        public static MetricTargetsReferences LoadUniqueScrapeConfig(ScrapeConfig scrapeConfig, TimeSpan scrapeTimeout)
         {
             var references = scrapeConfig.Jobs
                 .SelectMany(itm => itm.StaticConfigs)
@@ -23,7 +23,7 @@ namespace MyLab.PrometheusAgent.Tools
                     new HttpClient
                     {
                         BaseAddress = new Uri("http://" + endpoint),
-                        Timeout = TimeSpan.FromSeconds(15)
+                        Timeout = scrapeTimeout
                     }))
                 .ToArray();
 

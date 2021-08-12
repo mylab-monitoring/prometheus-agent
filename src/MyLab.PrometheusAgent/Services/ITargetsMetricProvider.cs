@@ -20,16 +20,19 @@ namespace MyLab.PrometheusAgent.Services
 
     class TargetsMetricProvider : ITargetsMetricProvider
     {
+        private readonly PrometheusAgentOptions _options;
         private readonly IScrapeConfigService _scrapeConfigService;
         private readonly TargetsReportService _targetsReportService;
         private MetricTargetsReferences _uniqueMetricTargets;
         private readonly IDslLogger _logger;
 
         public TargetsMetricProvider(
+            PrometheusAgentOptions options,
             IScrapeConfigService scrapeConfigService, 
             TargetsReportService targetsReportService,
             ILogger<TargetsMetricProvider> logger)
         {
+            _options = options;
             _scrapeConfigService = scrapeConfigService;
             _targetsReportService = targetsReportService;
             _logger = logger.Dsl();
@@ -40,7 +43,13 @@ namespace MyLab.PrometheusAgent.Services
             if (_uniqueMetricTargets == null)
             {
                 var scrapeConfig = await _scrapeConfigService.Provide();
-                _uniqueMetricTargets = MetricTargetsReferences.LoadUniqueScrapeConfig(scrapeConfig);
+
+                var timeout = TimeSpan.FromSeconds(
+                    _options.ScrapeTimeoutSec != 0
+                        ? _options.ScrapeTimeoutSec
+                        : 5
+                );
+                _uniqueMetricTargets = MetricTargetsReferences.LoadUniqueScrapeConfig(scrapeConfig, timeout);
             }
 
             var targetMetrics = new ConcurrentBag<TargetMetrics>();
