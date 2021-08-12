@@ -14,7 +14,7 @@ namespace UnitTests
         public async Task ShouldCombineLabels()
         {
             //Arrange
-            var scrapeConfigProvider = new TestScrapeConfigProvider();
+            var scrapeConfigProvider = new TestScrapeConfigService();
             var targetsMetricProvider = new TestTargetMetricsProvider();
             var reportBuilder = new MetricReportBuilder(targetsMetricProvider, scrapeConfigProvider);
 
@@ -36,15 +36,15 @@ namespace UnitTests
             Assert.Equal("localhost:123", reportItem.Labels["instance"]);
         }
 
-        class TestScrapeConfigProvider : IScrapeConfigProvider
+        class TestScrapeConfigService : IScrapeConfigService
         {
             public Task<ScrapeConfig> Provide()
             {
                 return Task.FromResult(new ScrapeConfig
                 {
-                    Items = new []
+                    Jobs = new []
                     {
-                        new ScrapeConfigItem
+                        new ScrapeConfigJob
                         {
                             JobName = "foo_job",
                             StaticConfigs = new []

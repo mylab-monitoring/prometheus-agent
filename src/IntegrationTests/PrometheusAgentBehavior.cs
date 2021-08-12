@@ -179,16 +179,16 @@ namespace IntegrationTests
 
             //Assert
             Assert.NotNull(cfg);
-            Assert.Single(cfg.Items);
-            Assert.Equal("job1", cfg.Items[0].JobName);
-            Assert.Single(cfg.Items[0].StaticConfigs);
-            Assert.NotNull(cfg.Items[0].StaticConfigs[0].Targets);
-            Assert.Equal(2,cfg.Items[0].StaticConfigs[0].Targets.Length);
-            Assert.Equal("localhost:10200", cfg.Items[0].StaticConfigs[0].Targets[0]);
-            Assert.Equal("localhost:10201", cfg.Items[0].StaticConfigs[0].Targets[1]);
-            Assert.Single(cfg.Items[0].StaticConfigs[0].Labels);
-            Assert.True(cfg.Items[0].StaticConfigs[0].Labels.ContainsKey("target_batch"));
-            Assert.Equal("1", cfg.Items[0].StaticConfigs[0].Labels["target_batch"]);
+            Assert.Single(cfg.Jobs);
+            Assert.Equal("job1", cfg.Jobs[0].JobName);
+            Assert.Single(cfg.Jobs[0].StaticConfigs);
+            Assert.NotNull(cfg.Jobs[0].StaticConfigs[0].Targets);
+            Assert.Equal(2,cfg.Jobs[0].StaticConfigs[0].Targets.Length);
+            Assert.Equal("localhost:10200", cfg.Jobs[0].StaticConfigs[0].Targets[0]);
+            Assert.Equal("localhost:10201", cfg.Jobs[0].StaticConfigs[0].Targets[1]);
+            Assert.Single(cfg.Jobs[0].StaticConfigs[0].Labels);
+            Assert.True(cfg.Jobs[0].StaticConfigs[0].Labels.ContainsKey("target_batch"));
+            Assert.Equal("1", cfg.Jobs[0].StaticConfigs[0].Labels["target_batch"]);
         }
 
         [Fact]

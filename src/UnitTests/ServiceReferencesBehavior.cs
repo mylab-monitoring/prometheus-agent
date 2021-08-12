@@ -12,9 +12,9 @@ namespace UnitTests
             //Arrange
             var scrapeConfig = new ScrapeConfig
             {
-                Items = new []
+                Jobs = new []
                 {
-                    new ScrapeConfigItem
+                    new ScrapeConfigJob
                     {
                         StaticConfigs = new []
                         {
@@ -28,7 +28,7 @@ namespace UnitTests
                             }, 
                         }
                     },
-                    new ScrapeConfigItem
+                    new ScrapeConfigJob
                     {
                         StaticConfigs = new []
                         {

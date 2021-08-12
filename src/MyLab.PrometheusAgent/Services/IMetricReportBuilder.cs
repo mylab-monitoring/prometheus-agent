@@ -13,22 +13,22 @@ namespace MyLab.PrometheusAgent.Services
     class MetricReportBuilder : IMetricReportBuilder
     {
         private readonly ITargetsMetricProvider _targetsMetricProvider;
-        private readonly IScrapeConfigProvider _scrapeConfigProvider;
+        private readonly IScrapeConfigService _scrapeConfigService;
 
         public MetricReportBuilder(
             ITargetsMetricProvider targetsMetricProvider,
-            IScrapeConfigProvider scrapeConfigProvider)
+            IScrapeConfigService scrapeConfigService)
         {
             _targetsMetricProvider = targetsMetricProvider;
-            _scrapeConfigProvider = scrapeConfigProvider;
+            _scrapeConfigService = scrapeConfigService;
         }
 
         public async Task<IEnumerable<MetricModel>> Build()
         {
             var targetMetrics = await _targetsMetricProvider.Provide();
-            var config = await _scrapeConfigProvider.Provide();
+            var config = await _scrapeConfigService.Provide();
                 
-            return config.Items
+            return config.Jobs
                 .SelectMany(itm => itm.StaticConfigs
                     .SelectMany(c => StaticConfigToReportItem(targetMetrics, c, itm.JobName)));
         }

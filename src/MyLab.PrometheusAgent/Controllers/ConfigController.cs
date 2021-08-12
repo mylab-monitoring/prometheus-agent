@@ -11,19 +11,19 @@ namespace MyLab.PrometheusAgent.Controllers
     [Route("config")]
     public class ConfigController : ControllerBase
     {
-        private readonly IScrapeConfigProvider _scrapeConfigProvider;
+        private readonly IScrapeConfigService _scrapeConfigService;
         private readonly ILogger<MetricsController> _logger;
 
-        public ConfigController(IScrapeConfigProvider scrapeConfigProvider, ILogger<MetricsController> logger)
+        public ConfigController(IScrapeConfigService scrapeConfigService, ILogger<MetricsController> logger)
         {
-            _scrapeConfigProvider = scrapeConfigProvider;
+            _scrapeConfigService = scrapeConfigService;
             _logger = logger;
         }
 
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            var scrapeConfig = await _scrapeConfigProvider.Provide();
+            var scrapeConfig = await _scrapeConfigService.Provide();
 
             var json = JsonConvert.SerializeObject(scrapeConfig);
 

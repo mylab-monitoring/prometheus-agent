@@ -20,17 +20,17 @@ namespace MyLab.PrometheusAgent.Services
 
     class TargetsMetricProvider : ITargetsMetricProvider
     {
-        private readonly IScrapeConfigProvider _scrapeConfigProvider;
+        private readonly IScrapeConfigService _scrapeConfigService;
         private readonly TargetsReportService _targetsReportService;
         private MetricTargetsReferences _uniqueMetricTargets;
         private readonly IDslLogger _logger;
 
         public TargetsMetricProvider(
-            IScrapeConfigProvider scrapeConfigProvider, 
+            IScrapeConfigService scrapeConfigService, 
             TargetsReportService targetsReportService,
             ILogger<TargetsMetricProvider> logger)
         {
-            _scrapeConfigProvider = scrapeConfigProvider;
+            _scrapeConfigService = scrapeConfigService;
             _targetsReportService = targetsReportService;
             _logger = logger.Dsl();
         }
@@ -39,7 +39,7 @@ namespace MyLab.PrometheusAgent.Services
         {
             if (_uniqueMetricTargets == null)
             {
-                var scrapeConfig = await _scrapeConfigProvider.Provide();
+                var scrapeConfig = await _scrapeConfigService.Provide();
                 _uniqueMetricTargets = MetricTargetsReferences.LoadUniqueScrapeConfig(scrapeConfig);
             }
 

@@ -14,7 +14,7 @@ namespace MyLab.PrometheusAgent.Tools
 
         public static MetricTargetsReferences LoadUniqueScrapeConfig(ScrapeConfig scrapeConfig)
         {
-            var references = scrapeConfig.Items
+            var references = scrapeConfig.Jobs
                 .SelectMany(itm => itm.StaticConfigs)
                 .SelectMany(cfg => cfg.Targets)
                 .Distinct()
