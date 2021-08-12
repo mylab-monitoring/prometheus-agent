@@ -168,7 +168,7 @@ version: '3.2'
 services:
   prometheus-agent:
     image: mylabtools/prometheus-agent
-	container_name: prometheus-agent
+    container_name: prometheus-agent
     volumes:
     - ./scrape_config.yml:/scrape_config.yml
     environment:
