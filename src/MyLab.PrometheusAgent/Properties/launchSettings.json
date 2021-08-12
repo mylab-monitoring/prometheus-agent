@@ -14,6 +14,9 @@
       "launchBrowser": true,
       "launchUrl": "config",
       "environmentVariables": {
+        "PrometheusAgent__DockerDiscovery": "All",
+        "PrometheusAgent__DockerSockPath": "npipe://./pipe/docker_engine",
+        "PrometheusAgent__ConfigExpirySec": "300",
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },

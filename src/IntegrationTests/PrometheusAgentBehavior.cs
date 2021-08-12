@@ -38,7 +38,7 @@ namespace IntegrationTests
         public async Task ShouldCombineMetrics()
         {
             //Arrange
-            Environment.SetEnvironmentVariable("PROMETHEUS_AGENT__CONFIG", "./scrape-config.yml");
+            Environment.SetEnvironmentVariable("PrometheusAgent__Config", "./scrape-config.yml");
             var agent = _api.StartWithProxy();
             var originTimeStamp = (long)(new DateTime(2021,6,28,8,19,18) - new DateTime(1970,1,1)).TotalMilliseconds;
 
@@ -131,7 +131,7 @@ namespace IntegrationTests
         public async Task ShouldResistantToUnaccessibleTargets()
         {
             //Arrange
-            Environment.SetEnvironmentVariable("PROMETHEUS_AGENT__CONFIG", "./scrape-config-wrong-port.yml");
+            Environment.SetEnvironmentVariable("PrometheusAgent__Config", "./scrape-config-wrong-port.yml");
             var agent = _api.StartWithProxy();
 
             //Act
@@ -151,7 +151,7 @@ namespace IntegrationTests
         public async Task ShouldResistantToUnresolvedHost()
         {
             //Arrange
-            Environment.SetEnvironmentVariable("PROMETHEUS_AGENT__CONFIG", "./scrape-config-wrong-host.yml");
+            Environment.SetEnvironmentVariable("PrometheusAgent__Config", "./scrape-config-wrong-host.yml");
             var agent = _api.StartWithProxy();
 
             //Act
@@ -171,7 +171,7 @@ namespace IntegrationTests
         public async Task ShouldProvideConfiguration()
         {
             //Arrange
-            Environment.SetEnvironmentVariable("PROMETHEUS_AGENT__CONFIG", "./scrape-config-min.yml");
+            Environment.SetEnvironmentVariable("PrometheusAgent__Config", "./scrape-config-min.yml");
             var agent = _api.StartWithProxy();
 
             //Act
@@ -195,7 +195,7 @@ namespace IntegrationTests
         public async Task ShouldProvideReport()
         {
             //Arrange
-            Environment.SetEnvironmentVariable("PROMETHEUS_AGENT__CONFIG", "./scrape-config-min.yml");
+            Environment.SetEnvironmentVariable("PrometheusAgent__Config", "./scrape-config-min.yml");
             var agent = _api.StartWithProxy();
             await agent.GetMetrics();
 

@@ -31,10 +31,11 @@ namespace IntegrationTests
         }
 
         [Theory]
-        [InlineData("http://prometheus-agent-target-autocfg-1:80/metrics")]
-        [InlineData("http://prometheus-agent-target-autocfg-2:80/metrics")]
-        [InlineData("http://prometheus-agent-target-autocfg-3:12345/metrics")]
-        [InlineData("http://prometheus-agent-target-autocfg-4:80/foo")]
+        [InlineData("prometheus-agent-target-autocfg-1")]
+        //[InlineData("http://prometheus-agent-target-autocfg-1:80/metrics")]
+        //[InlineData("http://prometheus-agent-target-autocfg-2:80/metrics")]
+        //[InlineData("http://prometheus-agent-target-autocfg-3:12345/metrics")]
+        //[InlineData("http://prometheus-agent-target-autocfg-4:80/foo")]
         public async Task ShouldDetectTarget(string expectedUrl)
         {
             //Arrange

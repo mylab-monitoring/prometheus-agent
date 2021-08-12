@@ -110,27 +110,29 @@ namespace MyLab.PrometheusAgent.Tools
                 return null;
             }
 
-            ushort? port = lbls.TryGetValue("metrics_port", out var portStr) 
-                ? ushort.Parse(portStr) 
-                : container.Ports?.FirstOrDefault()?.PrivatePort;
+            //ushort? port = lbls.TryGetValue("metrics_port", out var portStr) 
+            //    ? ushort.Parse(portStr) 
+            //    : container.Ports?.FirstOrDefault()?.PrivatePort;
 
-            if (!port.HasValue)
-            {
-                Log?.Warning("Can't detect container metric port. The 80 port will be used")
-                    .AndFactIs("container-id", container.ID)
-                    .Write();
+            //if (!port.HasValue)
+            //{
+            //    Log?.Warning("Can't detect container metric port. The 80 port will be used")
+            //        .AndFactIs("container-id", container.ID)
+            //        .Write();
 
-                port = 80;
-            }
+            //    port = 80;
+            //}
 
-            if (!lbls.TryGetValue("metrics_path", out var path))
-                path = "/metrics";
+            //if (!lbls.TryGetValue("metrics_path", out var path))
+            //    path = "/metrics";
 
 
-            var normPath = path.StartsWith('/') ? path : ("/" + path);
+            //var normPath = path.StartsWith('/') ? path : ("/" + path);
             var normHost = host.Trim('/');
 
-            string url = $"http://{normHost}:{port}{normPath}";
+            //string url = $"{normHost}:{port}{normPath}";
+
+            string url = normHost;
 
             return new ScrapeStaticConfig
             {

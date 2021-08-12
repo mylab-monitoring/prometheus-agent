@@ -2,7 +2,7 @@
 {
     public class PrometheusAgentOptions
     {
-        public string Config { get; set; } = "/etc/prometheus-agent/scrape-config.yml";
+        public string Config { get; set; }
 
         public DockerDiscoveryStrategy DockerDiscovery { get; set; } = DockerDiscoveryStrategy.None;
         public string DockerSockPath { get; set; } = "unix:///var/run/docker.sock";

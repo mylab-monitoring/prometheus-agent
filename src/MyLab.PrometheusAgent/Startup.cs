@@ -29,7 +29,7 @@ namespace MyLab.PrometheusAgent
             services.AddSingleton<ITargetsMetricProvider, TargetsMetricProvider>();
             services.AddSingleton<IMetricReportBuilder, MetricReportBuilder>();
             services.AddSingleton<TargetsReportService>();
-            services.Configure<PrometheusAgentOptions>(Configuration.GetSection("PROMETHEUS_AGENT"));
+            services.Configure<PrometheusAgentOptions>(Configuration.GetSection("PrometheusAgent"));
 
 #if DEBUG
             services.Configure<ExceptionProcessingOptions>(o => o.HideError = false);
@@ -52,6 +52,8 @@ namespace MyLab.PrometheusAgent
             {
                 endpoints.MapControllers();
             });
+
+            app.UseStatusApi();
         }
     }
 }
