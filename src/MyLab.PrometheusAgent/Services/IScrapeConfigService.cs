@@ -30,10 +30,11 @@ namespace MyLab.PrometheusAgent.Services
             if (options.Config != null)
                 configProviders.Add(new FileScrapeConfigProvider(options.Config));
 
-            if (options.DockerDiscovery != DockerDiscoveryStrategy.None)
-                configProviders.Add(new DockerScrapeConfigProvider(options.DockerSockPath, options.DockerDiscovery)
+            if (options.Docker.Strategy != DockerDiscoveryStrategy.None)
+                configProviders.Add(new DockerScrapeConfigProvider(options.Docker.Socket, options.Docker.Strategy)
                 {
-                    Log = logger.Dsl()
+                    Log = logger.Dsl(),
+                    AdditionalLabels = options.Docker.Labels
                 });
 
             TimeSpan? cfgExpiry = options.ConfigExpirySec == 0

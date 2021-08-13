@@ -18,6 +18,8 @@ namespace MyLab.PrometheusAgent.Tools
 
         public IDslLogger Log { get; set; }
 
+        public IDictionary<string,string> AdditionalLabels { get; set; }
+
         public DockerScrapeConfigProvider(string dockerSock, DockerDiscoveryStrategy discoveryStrategy)
         {
             _dockerSock = dockerSock;
@@ -134,9 +136,20 @@ namespace MyLab.PrometheusAgent.Tools
 
             string url = normHost;
 
+            var newLabels = new Dictionary<string,string>();
+
+            foreach (var l in lbls)
+                newLabels.Add(NormKey(l.Key), l.Value);
+
+            if (AdditionalLabels != null)
+            {
+                foreach (var l in AdditionalLabels)
+                    newLabels.Add(l.Key, l.Value);
+            }
+
             return new ScrapeStaticConfig
             {
-                Labels = lbls.ToDictionary(l => NormKey(l.Key), l => l.Value),
+                Labels = newLabels,
                 Targets = new []{ url }
             };
 

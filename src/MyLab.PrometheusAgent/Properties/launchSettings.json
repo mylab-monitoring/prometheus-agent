@@ -14,10 +14,10 @@
       "launchBrowser": true,
       "launchUrl": "metrics",
       "environmentVariables": {
-        "PrometheusAgent__DockerDiscovery": "All",
-        "PrometheusAgent__DockerSockPath": "npipe://./pipe/docker_engine",
+        "PrometheusAgent__Docker__Socket": "npipe://./pipe/docker_engine",
         "PrometheusAgent__ConfigExpirySec": "300",
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "PrometheusAgent__Docker__Strategy": "All"
       }
     },
     "MyLab.PrometheusAgent": {
