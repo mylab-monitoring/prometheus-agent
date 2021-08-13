@@ -12,7 +12,7 @@
     "IIS Express": {
       "commandName": "IISExpress",
       "launchBrowser": true,
-      "launchUrl": "config",
+      "launchUrl": "metrics",
       "environmentVariables": {
         "PrometheusAgent__DockerDiscovery": "All",
         "PrometheusAgent__DockerSockPath": "npipe://./pipe/docker_engine",

@@ -136,9 +136,22 @@ namespace MyLab.PrometheusAgent.Tools
 
             return new ScrapeStaticConfig
             {
-                Labels = lbls.ToDictionary(l => l.Key, l => "container_label_" + l.Value),
+                Labels = lbls.ToDictionary(l => NormKey(l.Key), l => l.Value),
                 Targets = new []{ url }
             };
+
+            string NormKey(string key)
+            {
+                char[] buff = key.ToCharArray();
+
+                for (int i = 0; i < buff.Length; i++)
+                {
+                    if (!char.IsLetterOrDigit(buff[i]) && buff[i] != '_' && buff[i] != ':')
+                        buff[i] = '_';
+                }
+
+                return "container_label_" + new string(buff);
+            }
         }
 
         public void Dispose()

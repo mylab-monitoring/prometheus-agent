@@ -7,6 +7,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using MyLab.Log.Dsl;
 using MyLab.Log;
 using MyLab.PrometheusAgent.Tools;
@@ -25,6 +26,15 @@ namespace MyLab.PrometheusAgent.Services
         private readonly TargetsReportService _targetsReportService;
         private MetricTargetsReferences _uniqueMetricTargets;
         private readonly IDslLogger _logger;
+
+        public TargetsMetricProvider(
+            IOptions<PrometheusAgentOptions> options,
+            IScrapeConfigService scrapeConfigService,
+            TargetsReportService targetsReportService,
+            ILogger<TargetsMetricProvider> logger)
+            :this(options.Value, scrapeConfigService, targetsReportService, logger)
+        {
+        }
 
         public TargetsMetricProvider(
             PrometheusAgentOptions options,
@@ -65,13 +75,22 @@ namespace MyLab.PrometheusAgent.Services
 
                     try
                     {
-                        var m= await RequestMetrics(r, reportItem);
+                        var m = await RequestMetrics(r, reportItem);
 
                         if (m != null)
                         {
-                            reportItem.MetricsCount = m.Metrics.Length;
+                            reportItem.MetricsCount = m.Metrics?.Length ?? 0;
                             targetMetrics.Add(m);
                         }
+                    }
+                    catch (HttpRequestException httpEx)
+                    {
+                        reportItem.Error = ExceptionDto.Create(httpEx);
+
+                        _logger.Warning("Cant get metrics")
+                            .AndFactIs("target", r.Id)
+                            .AndFactIs("error-msg", httpEx.Message)
+                            .Write();
                     }
                     catch (Exception e)
                     { 
@@ -124,6 +143,13 @@ namespace MyLab.PrometheusAgent.Services
 
             if (response.IsSuccessStatusCode)
             {
+                var mediaType = response.Content.Headers.ContentType?.MediaType;
+                if (mediaType != null && mediaType != "text/plain")
+                {
+                    throw new InvalidOperationException("Metrics response content-type specified and not supported")
+                        .AndFactIs("content-type", mediaType);
+                }
+
                 try
                 {
                     var stringContent= await response.Content.ReadAsStringAsync();
@@ -146,8 +172,9 @@ namespace MyLab.PrometheusAgent.Services
             }
             else
             {
-                throw new InvalidOperationException("Metric target return bad response")
-                    .AndFactIs("http-code", $"{(int) response.StatusCode}({response.ReasonPhrase})");
+                _logger.Warning("Metric target return bad response code")
+                    .AndFactIs("http-code", $"{(int) response.StatusCode}({response.ReasonPhrase})")
+                    .Write();
             }
 
             return result;

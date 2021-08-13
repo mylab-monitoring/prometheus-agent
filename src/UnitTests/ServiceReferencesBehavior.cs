@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using MyLab.PrometheusAgent.Tools;
 using Xunit;
 
@@ -46,7 +47,7 @@ namespace UnitTests
             };
 
             //Act
-            var references = MetricTargetsReferences.LoadUniqueScrapeConfig(scrapeConfig);
+            var references = MetricTargetsReferences.LoadUniqueScrapeConfig(scrapeConfig, TimeSpan.MaxValue);
 
             //Assert
             Assert.Equal(3, references.Count);
