@@ -7,10 +7,11 @@ using Docker.DotNet;
 using Docker.DotNet.Models;
 using MyLab.Log.Dsl;
 using MyLab.Log;
+using MyLab.PrometheusAgent.Model;
 
 namespace MyLab.PrometheusAgent.Tools
 {
-    class DockerScrapeConfigProvider : IScrapeConfigProvider, IDisposable
+    class DockerScrapeSourceProvider : IScrapeSourceProvider, IDisposable
     {
         private readonly string _dockerSock;
         private readonly DockerDiscoveryStrategy _discoveryStrategy;
@@ -20,7 +21,7 @@ namespace MyLab.PrometheusAgent.Tools
 
         public IDictionary<string,string> AdditionalLabels { get; set; }
 
-        public DockerScrapeConfigProvider(string dockerSock, DockerDiscoveryStrategy discoveryStrategy)
+        public DockerScrapeSourceProvider(string dockerSock, DockerDiscoveryStrategy discoveryStrategy)
         {
             _dockerSock = dockerSock;
             _discoveryStrategy = discoveryStrategy;
@@ -29,10 +30,10 @@ namespace MyLab.PrometheusAgent.Tools
                 .CreateClient();
         }
 
-        public async Task<ScrapeConfig> LoadAsync()
+        public async Task<ScrapeSourceDescription[]> LoadAsync()
         {
             if(_discoveryStrategy == DockerDiscoveryStrategy.None)
-                return new ScrapeConfig();
+                return null;
 
             IList<ContainerListResponse> containerList;
 
@@ -83,26 +84,16 @@ namespace MyLab.PrometheusAgent.Tools
                     break;
             }
 
-            return new ScrapeConfig
-            {
-                Jobs = new []
-                {
-                    new ScrapeConfigJob
-                    {
-                        JobName = "local-auto",
-                        StaticConfigs = activeContainers
-                            .Select(GetContainerInfo)
-                            .ToArray()
-                    } 
-                }
-            };
+            return activeContainers
+                .Select(ContainerToDesc)
+                .ToArray();
         }
 
-        private ScrapeStaticConfig GetContainerInfo(ContainerListResponse container)
+        private ScrapeSourceDescription ContainerToDesc(ContainerListResponse container)
         {
-            var lbls = container.Labels;
-
             string host = container.Names.FirstOrDefault() ?? container.NetworkSettings?.Networks?.FirstOrDefault().Value.IPAddress;
+
+            var cLabels = new Dictionary<string,string>(container.Labels);
 
             if (host == null)
             {
@@ -112,34 +103,64 @@ namespace MyLab.PrometheusAgent.Tools
                 return null;
             }
 
-            //ushort? port = lbls.TryGetValue("metrics_port", out var portStr) 
-            //    ? ushort.Parse(portStr) 
-            //    : container.Ports?.FirstOrDefault()?.PrivatePort;
+            int? port;
 
-            //if (!port.HasValue)
-            //{
-            //    Log?.Warning("Can't detect container metric port. The 80 port will be used")
-            //        .AndFactIs("container-id", container.ID)
-            //        .Write();
+            if (cLabels.TryGetValue("metrics_port", out var portStr))
+            {
+                port = ushort.Parse(portStr);
+                cLabels.Remove("metrics_port");
+            }
+            else
+            {
+                var foundPrivatePort = container.Ports?.FirstOrDefault()?.PrivatePort;
 
-            //    port = 80;
-            //}
+                if (foundPrivatePort.HasValue)
+                {
+                    port = foundPrivatePort;
+                }
+                else
+                {
+                    Log?.Warning("Can't detect container metric port. The 80 port will be used")
+                        .AndFactIs("container-id", container.ID)
+                        .Write();
 
-            //if (!lbls.TryGetValue("metrics_path", out var path))
-            //    path = "/metrics";
+                    port = 80;
+                }
+            }
+
+            if (cLabels.TryGetValue("metrics_path", out var path))
+            {
+                cLabels.Remove("metrics_path");
+            }
+            else
+            {
+                path = "/metrics";
+            }
 
 
-            //var normPath = path.StartsWith('/') ? path : ("/" + path);
+            var normPath = path.StartsWith('/') ? path : ("/" + path);
             var normHost = host.Trim('/');
 
-            //string url = $"{normHost}:{port}{normPath}";
-
-            string url = normHost;
+            var url = new UriBuilder
+            {
+                Host = normHost,
+                Port = port.Value,
+                Path = normPath
+            }.Uri;
 
             var newLabels = new Dictionary<string,string>();
 
-            foreach (var l in lbls)
-                newLabels.Add(NormKey(l.Key), l.Value);
+            foreach (var l in cLabels)
+            {
+                if (l.Key.StartsWith("metrics_"))
+                {
+                    newLabels.Add(NormKey(l.Key.Substring(8)), l.Value);
+                }
+                else
+                {
+                    newLabels.Add("container_label_" + NormKey(l.Key), l.Value);
+                }
+            }
 
             if (AdditionalLabels != null)
             {
@@ -147,24 +168,20 @@ namespace MyLab.PrometheusAgent.Tools
                     newLabels.Add(l.Key, l.Value);
             }
 
-            return new ScrapeStaticConfig
+            return new ScrapeSourceDescription(url, newLabels);
+        }
+
+        string NormKey(string key)
+        {
+            char[] buff = key.ToCharArray();
+
+            for (int i = 0; i < buff.Length; i++)
             {
-                Labels = newLabels,
-                Targets = new []{ url }
-            };
-
-            string NormKey(string key)
-            {
-                char[] buff = key.ToCharArray();
-
-                for (int i = 0; i < buff.Length; i++)
-                {
-                    if (!char.IsLetterOrDigit(buff[i]) && buff[i] != '_' && buff[i] != ':')
-                        buff[i] = '_';
-                }
-
-                return "container_label_" + new string(buff);
+                if (!char.IsLetterOrDigit(buff[i]) && buff[i] != '_' && buff[i] != ':')
+                    buff[i] = '_';
             }
+
+            return  new string(buff);
         }
 
         public void Dispose()

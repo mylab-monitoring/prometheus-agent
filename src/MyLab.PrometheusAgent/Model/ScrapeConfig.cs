@@ -1,8 +1,7 @@
 ﻿using System.Collections.Generic;
-using System.IO;
 using YamlDotNet.Serialization;
 
-namespace MyLab.PrometheusAgent.Tools
+namespace MyLab.PrometheusAgent.Model
 {
     public class ScrapeConfig
     {
@@ -24,6 +23,9 @@ namespace MyLab.PrometheusAgent.Tools
     {
         [YamlMember(Alias = "job_name")]
         public string JobName { get; set; }
+
+        [YamlMember(Alias = "metrics_path")]
+        public string MetricPath { get; set; }
 
         [YamlMember(Alias = "static_configs")]
         public ScrapeStaticConfig[] StaticConfigs { get; set; }

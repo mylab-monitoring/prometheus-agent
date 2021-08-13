@@ -25,9 +25,8 @@ namespace MyLab.PrometheusAgent
             services.AddLogging(c => c.AddConsole());
             services.AddControllers(c => c.AddExceptionProcessing());
             services.AddAppStatusProviding(Configuration as IConfigurationRoot);
-            services.AddSingleton<IScrapeConfigService, ScrapeConfigService>();
+            services.AddSingleton<IScrapeSourcesService, ScrapeSourcesService>();
             services.AddSingleton<ITargetsMetricProvider, TargetsMetricProvider>();
-            services.AddSingleton<IMetricReportBuilder, MetricReportBuilder>();
             services.AddSingleton<TargetsReportService>();
             services.Configure<PrometheusAgentOptions>(Configuration.GetSection("PrometheusAgent"));
 

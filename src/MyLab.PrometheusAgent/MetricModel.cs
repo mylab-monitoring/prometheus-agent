@@ -42,7 +42,7 @@ namespace MyLab.PrometheusAgent
             
         }
 
-        public MetricModel AddLabels(IDictionary<string, string> addLabels)
+        public MetricModel AddLabels(IEnumerable<KeyValuePair<string, string>> addLabels)
         {
             var newLabels = new Dictionary<string, string>();
 

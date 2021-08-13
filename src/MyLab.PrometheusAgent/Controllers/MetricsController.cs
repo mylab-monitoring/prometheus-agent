@@ -12,24 +12,26 @@ namespace MyLab.PrometheusAgent.Controllers
     [Route("metrics")]
     public class MetricsController : ControllerBase
     {
-        private readonly IMetricReportBuilder _metricReportBuilder;
+        private readonly ITargetsMetricProvider _targetsMetricProvider;
         private readonly ILogger<MetricsController> _logger;
 
-        public MetricsController(IMetricReportBuilder metricReportBuilder, ILogger<MetricsController> logger)
+        public MetricsController(
+            ITargetsMetricProvider targetsMetricProvider,
+            ILogger<MetricsController> logger)
         {
-            _metricReportBuilder = metricReportBuilder;
+            _targetsMetricProvider = targetsMetricProvider;
             _logger = logger;
         }
 
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            var report = await _metricReportBuilder.Build();
-
+            var metrics = await _targetsMetricProvider.ProvideAsync();
+            
             var resultBuilder = new StringBuilder();
             var resultWriter = new StringWriter(resultBuilder);
 
-            foreach (var metric in report)
+            foreach (var metric in metrics)
             {
                 await metric.WriteAsync(resultWriter);
             }

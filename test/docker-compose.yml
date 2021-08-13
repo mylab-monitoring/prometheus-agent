@@ -21,7 +21,8 @@ services:
     ports:
     - "10202:80"
     labels:
-      label_foo: label_bar
+      foo: label_foo
+      metrics_bar: label_bar
   prometheus-agent-target-autocfg-2:
     container_name: prometheus-agent-target-autocfg-2
     image: nginx

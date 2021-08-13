@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using MyLab.PrometheusAgent.Model;
 using MyLab.PrometheusAgent.Tools;
 using Xunit;
 

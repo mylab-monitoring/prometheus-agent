@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using MartinCostello.Logging.XUnit;
 using MyLab.Log.Dsl;
 using MyLab.PrometheusAgent;
+using MyLab.PrometheusAgent.Model;
 using MyLab.PrometheusAgent.Tools;
 using Xunit;
 using Xunit.Abstractions;
@@ -22,41 +23,27 @@ namespace IntegrationTests
             _logger = logger.Dsl();
         }
 
-        DockerScrapeConfigProvider CreateProvider(DockerDiscoveryStrategy discoveryStrategy)
+        DockerScrapeSourceProvider CreateProvider(DockerDiscoveryStrategy discoveryStrategy)
         {
-            return new DockerScrapeConfigProvider("npipe://./pipe/docker_engine", discoveryStrategy)
+            return new DockerScrapeSourceProvider("npipe://./pipe/docker_engine", discoveryStrategy)
             {
                 Log = _logger
             };
         }
 
         [Theory]
-        [InlineData("prometheus-agent-target-autocfg-1")]
-        //[InlineData("http://prometheus-agent-target-autocfg-1:80/metrics")]
-        //[InlineData("http://prometheus-agent-target-autocfg-2:80/metrics")]
-        //[InlineData("http://prometheus-agent-target-autocfg-3:12345/metrics")]
-        //[InlineData("http://prometheus-agent-target-autocfg-4:80/foo")]
+        [InlineData("http://prometheus-agent-target-autocfg-1:80/metrics")]
+        [InlineData("http://prometheus-agent-target-autocfg-2:12345/metrics")]
+        [InlineData("http://prometheus-agent-target-autocfg-3:12345/metrics")]
+        [InlineData("http://prometheus-agent-target-autocfg-4:80/foo")]
         public async Task ShouldDetectTarget(string expectedUrl)
         {
             //Arrange
             var provider = CreateProvider(DockerDiscoveryStrategy.All);
 
             //Act
-            var cfg = await provider.LoadAsync();
-            ScrapeStaticConfig[] targets;
-
-            try
-            {
-                targets = cfg.Jobs.FirstOrDefault()?.StaticConfigs
-                    .Where(c => c.Targets.Any(n => n.Contains("prometheus-agent-target-autocfg")))
-                    .ToArray();
-            }
-            finally
-            {
-                provider.Dispose();
-            }
-
-            var staticCfg = targets?.SingleOrDefault(c => c.Targets.Contains(expectedUrl));
+            var selectedSources = await LoadTestContainers(provider);
+            var staticCfg = selectedSources.SingleOrDefault(c => c.ScrapeUrl.OriginalString == expectedUrl);
 
             //Assert
             Assert.NotNull(staticCfg);
@@ -75,23 +62,10 @@ namespace IntegrationTests
         {
             //Arrange
             var provider = CreateProvider(strategy);
-            
+
             //Act
-            var cfg = await provider.LoadAsync();
-            ScrapeStaticConfig[] targets;
-
-            try
-            {
-                targets = cfg.Jobs.FirstOrDefault()?.StaticConfigs
-                    .Where(c => c.Targets.Any(n => n.Contains("prometheus-agent-target-autocfg")))
-                    .ToArray();
-            }
-            finally
-            {
-                provider.Dispose();
-            }
-
-            var staticCfg = targets?.SingleOrDefault(c => c.Targets.Any(t => t.Contains(shouldBeFound)));
+            var selectedSources = await LoadTestContainers(provider);
+            var staticCfg = selectedSources.SingleOrDefault(c => c.ScrapeUrl.Host == shouldBeFound);
 
             //Assert
             Assert.NotNull(staticCfg);
@@ -112,40 +86,56 @@ namespace IntegrationTests
             var provider = CreateProvider(strategy);
 
             //Act
-            var cfg = await provider.LoadAsync();
-            ScrapeStaticConfig[] targets;
-
-            try
-            {
-                targets = cfg.Jobs.FirstOrDefault()?.StaticConfigs
-                    .Where(c => c.Targets.Any(n => n.Contains("prometheus-agent-target-autocfg")))
-                    .ToArray();
-            }
-            finally
-            {
-                provider.Dispose();
-            }
-
-            var staticCfg = targets?.SingleOrDefault(c => c.Targets.Any(t => t.Contains(shouldNotBeFound)));
+            var selectedSources = await LoadTestContainers(provider);
+            var staticCfg = selectedSources.FirstOrDefault(c => c.ScrapeUrl.Host == shouldNotBeFound);
 
             //Assert
             Assert.Null(staticCfg);
         }
 
         [Fact]
-        public async Task ShouldProvideContainerLabels()
+        public async Task ShouldProvideRegularContainerLabels()
         {
             //Arrange
             var provider = CreateProvider(DockerDiscoveryStrategy.All);
 
             //Act
-            var cfg = await provider.LoadAsync();
-            ScrapeStaticConfig[] targets;
+            var selectedSources = await LoadTestContainers(provider);
+
+            var staticCfg = selectedSources.FirstOrDefault(c => c.ScrapeUrl.Host == "prometheus-agent-target-autocfg-1");
+
+            staticCfg.Labels.TryGetValue("container_label_foo", out var labelValue);
+
+            //Assert
+            Assert.Equal("label_foo", labelValue);
+        }
+
+        [Fact]
+        public async Task ShouldProvideAsIsContainerLabels()
+        {
+            //Arrange
+            var provider = CreateProvider(DockerDiscoveryStrategy.All);
+
+            //Act
+            var selectedSources = await LoadTestContainers(provider);
+
+            var staticCfg = selectedSources.FirstOrDefault(c => c.ScrapeUrl.Host == "prometheus-agent-target-autocfg-1");
+
+            staticCfg.Labels.TryGetValue("bar", out var labelValue);
+
+            //Assert
+            Assert.Equal("label_bar", labelValue);
+        }
+
+        private static async Task<ScrapeSourceDescription[]> LoadTestContainers(DockerScrapeSourceProvider provider)
+        {
+            var providedSources = await provider.LoadAsync();
+            ScrapeSourceDescription[] selectedSources;
 
             try
             {
-                targets = cfg.Jobs.FirstOrDefault()?.StaticConfigs
-                    .Where(c => c.Targets.Any(n => n.Contains("prometheus-agent-target-autocfg")))
+                selectedSources = providedSources
+                    .Where(s => s.ScrapeUrl.Host.Contains("prometheus-agent-target-autocfg"))
                     .ToArray();
             }
             finally
@@ -153,12 +143,7 @@ namespace IntegrationTests
                 provider.Dispose();
             }
 
-            var staticCfg = targets?.SingleOrDefault(c => c.Targets.Any(t => t.Contains("prometheus-agent-target-autocfg-1")));
-
-            staticCfg.Labels.TryGetValue("label_foo", out var labelValue);
-
-            //Assert
-            Assert.Equal("container_label_label_bar", labelValue);
+            return selectedSources;
         }
     }
 }

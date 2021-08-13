@@ -5,8 +5,7 @@ namespace MyLab.PrometheusAgent
     public class PrometheusAgentOptions
     {
         public string Config { get; set; }
-        public int ConfigExpirySec { get; set; }
-        public int ScrapeTimeoutSec { get; set; }
+        public int? ScrapeTimeoutSec { get; set; }
         public DockerDiscoveryOpts Docker { get; set; } = new DockerDiscoveryOpts();
     }
 
