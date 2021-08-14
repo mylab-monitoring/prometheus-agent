@@ -22,8 +22,8 @@ namespace MyLab.PrometheusAgent.Services
         {
             _configProviders = new List<IScrapeSourceProvider>();
 
-            if (options.Config != null)
-                _configProviders.Add(new FileScrapeSourceProvider(options.Config));
+            if (options.ScrapeConfig != null)
+                _configProviders.Add(new FileScrapeSourceProvider(options.ScrapeConfig));
 
             if (options.Docker.Strategy != DockerDiscoveryStrategy.None)
                 _configProviders.Add(new DockerScrapeSourceProvider(options.Docker.Socket, options.Docker.Strategy)
