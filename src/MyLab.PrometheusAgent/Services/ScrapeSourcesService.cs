@@ -29,7 +29,8 @@ namespace MyLab.PrometheusAgent.Services
                 _configProviders.Add(new DockerScrapeSourceProvider(options.Docker.Socket, options.Docker.Strategy)
                 {
                     Log = logger.Dsl(),
-                    AdditionalLabels = options.Docker.Labels
+                    AdditionalLabels = options.Docker.Labels,
+                    ExcludeServiceLabels = options.Docker.DisableServiceContainerLabels
                 });
         }
 

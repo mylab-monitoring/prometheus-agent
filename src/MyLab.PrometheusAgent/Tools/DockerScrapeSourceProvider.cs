@@ -17,9 +17,19 @@ namespace MyLab.PrometheusAgent.Tools
         private readonly DockerDiscoveryStrategy _discoveryStrategy;
         private readonly DockerClient _client;
 
-        public IDslLogger Log { get; set; }
+        private static readonly string[] ExactlyServiceLabels = new[]
+        {
+            "maintainer"
+        };
 
+        private static readonly string[] ServiceLabelsStartWith = new[]
+        {
+            "com.docker.compose.",
+            "desktop.docker."
+        };
+        public IDslLogger Log { get; set; }
         public IDictionary<string,string> AdditionalLabels { get; set; }
+        public bool ExcludeServiceLabels { get; set; }
 
         public DockerScrapeSourceProvider(string dockerSock, DockerDiscoveryStrategy discoveryStrategy)
         {
@@ -103,8 +113,76 @@ namespace MyLab.PrometheusAgent.Tools
                 return null;
             }
 
-            int? port;
+            var port = RetrievePort(container, cLabels);
+            var path = RetrieveMetricPath(cLabels);
+            
+            var normHost = host.Trim('/');
 
+            var url = new UriBuilder
+            {
+                Host = normHost,
+                Port = port,
+                Path = path
+            }.Uri;
+
+            var newLabels = RetrieveLabels(cLabels);
+
+            return new ScrapeSourceDescription(url, newLabels);
+        }
+
+        private Dictionary<string, string> RetrieveLabels(Dictionary<string, string> cLabels)
+        {
+            var newLabels = new Dictionary<string, string>();
+
+            foreach (var l in cLabels)
+            {
+                if (ExcludeServiceLabels)
+                {
+                    var labelExactlyService = ExactlyServiceLabels.Contains(l.Key);
+                    var labelStartsWithServiceStart = ServiceLabelsStartWith.Any(sl => l.Key.StartsWith(sl));
+
+                    if (labelExactlyService || labelStartsWithServiceStart)
+                    {
+                        continue;
+                    }
+                }
+
+                if (l.Key.StartsWith("metrics_"))
+                {
+                    newLabels.Add(NormKey(l.Key.Substring(8)), l.Value);
+                }
+                else
+                {
+                    newLabels.Add("container_label_" + NormKey(l.Key), l.Value);
+                }
+            }
+
+            if (AdditionalLabels != null)
+            {
+                foreach (var l in AdditionalLabels)
+                    newLabels.Add(l.Key, l.Value);
+            }
+
+            return newLabels;
+        }
+
+        private static string RetrieveMetricPath(Dictionary<string, string> cLabels)
+        {
+            if (cLabels.TryGetValue("metrics_path", out var path))
+            {
+                cLabels.Remove("metrics_path");
+            }
+            else
+            {
+                path = "/metrics";
+            }
+
+            return path.StartsWith('/') ? path : ("/" + path);
+        }
+
+        private int RetrievePort(ContainerListResponse container, Dictionary<string, string> cLabels)
+        {
+            int? port;
             if (cLabels.TryGetValue("metrics_port", out var portStr))
             {
                 port = ushort.Parse(portStr);
@@ -128,47 +206,7 @@ namespace MyLab.PrometheusAgent.Tools
                 }
             }
 
-            if (cLabels.TryGetValue("metrics_path", out var path))
-            {
-                cLabels.Remove("metrics_path");
-            }
-            else
-            {
-                path = "/metrics";
-            }
-
-
-            var normPath = path.StartsWith('/') ? path : ("/" + path);
-            var normHost = host.Trim('/');
-
-            var url = new UriBuilder
-            {
-                Host = normHost,
-                Port = port.Value,
-                Path = normPath
-            }.Uri;
-
-            var newLabels = new Dictionary<string,string>();
-
-            foreach (var l in cLabels)
-            {
-                if (l.Key.StartsWith("metrics_"))
-                {
-                    newLabels.Add(NormKey(l.Key.Substring(8)), l.Value);
-                }
-                else
-                {
-                    newLabels.Add("container_label_" + NormKey(l.Key), l.Value);
-                }
-            }
-
-            if (AdditionalLabels != null)
-            {
-                foreach (var l in AdditionalLabels)
-                    newLabels.Add(l.Key, l.Value);
-            }
-
-            return new ScrapeSourceDescription(url, newLabels);
+            return port.Value;
         }
 
         string NormKey(string key)

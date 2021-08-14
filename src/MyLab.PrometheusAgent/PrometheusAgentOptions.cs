@@ -14,6 +14,7 @@ namespace MyLab.PrometheusAgent
         public DockerDiscoveryStrategy Strategy { get; set; } = DockerDiscoveryStrategy.None;
         public string Socket { get; set; } = "unix:///var/run/docker.sock";
         public Dictionary<string, string> Labels { get; set; }
+        public bool DisableServiceContainerLabels { get; set; } = true;
     }
 
     public enum DockerDiscoveryStrategy
