@@ -16,10 +16,12 @@ namespace MyLab.PrometheusAgent.Services
         private readonly TargetsReportService _targetsReportService;
         private readonly IDslLogger _logger;
 
-        private readonly object _initSync = new object();
         private MetricSource[] _metricSources;
+        private DateTime _metricsActualDt;
+
         private readonly TimeSpan _scrapeTimeout;
         private readonly TimeSpan _surveyTimeout;
+        private readonly TimeSpan _configExpiry;
 
         public TargetsMetricProvider(
             IOptions<PrometheusAgentOptions> options,
@@ -42,6 +44,9 @@ namespace MyLab.PrometheusAgent.Services
 
             _scrapeTimeout = TimeSpan.FromSeconds(options.ScrapeTimeoutSec ?? 10);
             _surveyTimeout = _scrapeTimeout.Add(TimeSpan.FromSeconds(1));
+            _configExpiry = options.ConfigExpirySec.HasValue
+                ? TimeSpan.FromSeconds(options.ConfigExpirySec.Value)
+                : TimeSpan.FromMinutes(1);
         }
 
         public async Task<MetricModel[]> ProvideAsync()
@@ -83,25 +88,22 @@ namespace MyLab.PrometheusAgent.Services
 
         private async Task InitSourcesAsync()
         {
-            //if (_metricSources != null)
-            //    return;
+            if (_metricSources != null)
+            {
+                var sourceListTooOld = (DateTime.Now - _metricsActualDt) > _configExpiry;
 
-            //Monitor.Enter(_initSync);
+                if(!sourceListTooOld)
+                    return;
+            }
 
-            //try
-            //{
-                var sourceDescriptions = await _scrapeSourcesService.ProvideAsync();
-                _metricSources = sourceDescriptions
-                    .Select(d => new MetricSource(d.ScrapeUrl, _scrapeTimeout, d.Labels)
-                    {
-                        Log = _logger
-                    })
-                    .ToArray();
-            //}
-            //finally
-            //{
-            //    Monitor.Exit(_initSync);
-            //}
+            var sourceDescriptions = await _scrapeSourcesService.ProvideAsync().ContinueWith(t => t.Result);
+            _metricSources = sourceDescriptions
+                .Select(d => new MetricSource(d.ScrapeUrl, _scrapeTimeout, d.Labels)
+                {
+                    Log = _logger
+                })
+                .ToArray();
+            _metricsActualDt = DateTime.Now;
         }
 
         public void Dispose()
