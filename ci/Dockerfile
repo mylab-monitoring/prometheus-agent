@@ -15,6 +15,9 @@ RUN dotnet publish -c release -o /app --no-restore
 
 # final stage/image
 FROM mcr.microsoft.com/dotnet/aspnet:5.0
+
+LABEL metrics_exclude="true"
+
 ARG PROJ
 ENV PROJ_FILE=$PROJ
 WORKDIR /app
