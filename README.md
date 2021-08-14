@@ -1,6 +1,8 @@
 # MyLab.PrometheusAgent
 [![Docker image](https://img.shields.io/docker/v/mylabtools/prometheus-agent?label=Docker%20image)](https://hub.docker.com/r/mylabtools/prometheus-agent)
 
+[![API specification](https://img.shields.io/badge/OAS3-oas3%20specifiecation-green)](https://app.swaggerhub.com/apis/ozzy/mylab-parometheus-agent/1)
+
 Ознакомьтесь с последними изменениями в [журнале изменений](/changelog.md).
 
 ## Обзор 
