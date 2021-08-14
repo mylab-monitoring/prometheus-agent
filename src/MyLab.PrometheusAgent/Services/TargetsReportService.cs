@@ -7,6 +7,8 @@ namespace MyLab.PrometheusAgent.Services
 {
     public class TargetsReportService
     {
+        private readonly object _sync = new object();
+
         private readonly Dictionary<string, TargetsReportItem> _items;
         public IReadOnlyDictionary<string, TargetsReportItem> Items { get; }
 
@@ -18,10 +20,13 @@ namespace MyLab.PrometheusAgent.Services
 
         public void Report(TargetsReportItem reportItem)
         {
-            if (_items.ContainsKey(reportItem.Id))
-                _items[reportItem.Id] = reportItem;
-            else
-                _items.Add(reportItem.Id, reportItem);
+            lock (_sync)
+            {
+                if (_items.ContainsKey(reportItem.Id))
+                    _items[reportItem.Id] = reportItem;
+                else
+                    _items.Add(reportItem.Id, reportItem);
+            }
         }
     }
 

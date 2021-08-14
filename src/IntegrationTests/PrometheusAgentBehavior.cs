@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using MyLab.ApiClient;
 using MyLab.ApiClient.Test;
 using MyLab.PrometheusAgent;
+using MyLab.PrometheusAgent.Model;
 using MyLab.PrometheusAgent.Services;
 using MyLab.PrometheusAgent.Tools;
 using MyLab.WebErrors;
@@ -30,7 +31,7 @@ namespace IntegrationTests
                 ServiceOverrider = services => 
                     services
                         .Configure<ExceptionProcessingOptions>(o => o.HideError = false)
-                        .AddLogging(c => c.AddXUnit(output))
+                        .AddLogging(c => c.AddXUnit(output).AddFilter(l =>true))
             };
         }
 
@@ -38,7 +39,7 @@ namespace IntegrationTests
         public async Task ShouldCombineMetrics()
         {
             //Arrange
-            Environment.SetEnvironmentVariable("PROMETHEUS_AGENT__CONFIG", "./scrape-config.yml");
+            Environment.SetEnvironmentVariable("PrometheusAgent__Config", "./scrape-config.yml");
             var agent = _api.StartWithProxy();
             var originTimeStamp = (long)(new DateTime(2021,6,28,8,19,18) - new DateTime(1970,1,1)).TotalMilliseconds;
 
@@ -131,7 +132,7 @@ namespace IntegrationTests
         public async Task ShouldResistantToUnaccessibleTargets()
         {
             //Arrange
-            Environment.SetEnvironmentVariable("PROMETHEUS_AGENT__CONFIG", "./scrape-config-wrong-port.yml");
+            Environment.SetEnvironmentVariable("PrometheusAgent__Config", "./scrape-config-wrong-port.yml");
             var agent = _api.StartWithProxy();
 
             //Act
@@ -151,7 +152,7 @@ namespace IntegrationTests
         public async Task ShouldResistantToUnresolvedHost()
         {
             //Arrange
-            Environment.SetEnvironmentVariable("PROMETHEUS_AGENT__CONFIG", "./scrape-config-wrong-host.yml");
+            Environment.SetEnvironmentVariable("PrometheusAgent__Config", "./scrape-config-wrong-host.yml");
             var agent = _api.StartWithProxy();
 
             //Act
@@ -171,39 +172,38 @@ namespace IntegrationTests
         public async Task ShouldProvideConfiguration()
         {
             //Arrange
-            Environment.SetEnvironmentVariable("PROMETHEUS_AGENT__CONFIG", "./scrape-config-min.yml");
+            Environment.SetEnvironmentVariable("PrometheusAgent__Config", "./scrape-config-min.yml");
             var agent = _api.StartWithProxy();
 
             //Act
-            var cfg = await agent.GetConfig();
+            var sources = await agent.GetConfig();
 
             //Assert
-            Assert.NotNull(cfg);
-            Assert.Single(cfg.Items);
-            Assert.Equal("job1", cfg.Items[0].JobName);
-            Assert.Single(cfg.Items[0].StaticConfigs);
-            Assert.NotNull(cfg.Items[0].StaticConfigs[0].Targets);
-            Assert.Equal(2,cfg.Items[0].StaticConfigs[0].Targets.Length);
-            Assert.Equal("localhost:10200", cfg.Items[0].StaticConfigs[0].Targets[0]);
-            Assert.Equal("localhost:10201", cfg.Items[0].StaticConfigs[0].Targets[1]);
-            Assert.Single(cfg.Items[0].StaticConfigs[0].Labels);
-            Assert.True(cfg.Items[0].StaticConfigs[0].Labels.ContainsKey("target_batch"));
-            Assert.Equal("1", cfg.Items[0].StaticConfigs[0].Labels["target_batch"]);
+            Assert.NotNull(sources);
+            Assert.Equal(2, sources.Length);
+            Assert.Equal("http://localhost:10200/metrics-path", sources[0].ScrapeUrl.OriginalString);
+            Assert.Equal("localhost:10200", sources[0].Labels["instance"]);
+            Assert.Equal("job1", sources[0].Labels["job"]);
+            Assert.Equal("1", sources[0].Labels["target_batch"]);
+            Assert.Equal("http://localhost:10201/metrics-path", sources[1].ScrapeUrl.OriginalString);
+            Assert.Equal("localhost:10201", sources[1].Labels["instance"]);
+            Assert.Equal("job1", sources[1].Labels["job"]);
+            Assert.Equal("1", sources[1].Labels["target_batch"]);
         }
 
         [Fact]
         public async Task ShouldProvideReport()
         {
             //Arrange
-            Environment.SetEnvironmentVariable("PROMETHEUS_AGENT__CONFIG", "./scrape-config-min.yml");
+            Environment.SetEnvironmentVariable("PrometheusAgent__Config", "./scrape-config-min.yml");
             var agent = _api.StartWithProxy();
             await agent.GetMetrics();
 
             //Act
             var report = await agent.GetReport();
 
-            var report1 = report?.FirstOrDefault(r => r.Id == "localhost:10200");
-            var report2 = report?.FirstOrDefault(r => r.Id == "localhost:10201");
+            var report1 = report?.FirstOrDefault(r => r.Id == "http://localhost:10200/metrics-path");
+            var report2 = report?.FirstOrDefault(r => r.Id == "http://localhost:10201/metrics-path");
 
             //Assert
             Assert.NotNull(report1);
@@ -251,7 +251,7 @@ namespace IntegrationTests
         Task<string> GetMetrics();
 
         [Get("config")]
-        Task<ScrapeConfig> GetConfig();
+        Task<ScrapeSourceDescription[]> GetConfig();
 
         [Get("report")]
         Task<TargetsReportItem[]> GetReport();

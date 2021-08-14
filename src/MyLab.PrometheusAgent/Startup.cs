@@ -25,11 +25,12 @@ namespace MyLab.PrometheusAgent
             services.AddLogging(c => c.AddConsole());
             services.AddControllers(c => c.AddExceptionProcessing());
             services.AddAppStatusProviding(Configuration as IConfigurationRoot);
-            services.AddSingleton<IScrapeConfigProvider, ScrapeConfigProvider>();
+            services.AddSingleton<IScrapeSourcesService, ScrapeSourcesService>();
             services.AddSingleton<ITargetsMetricProvider, TargetsMetricProvider>();
-            services.AddSingleton<IMetricReportBuilder, MetricReportBuilder>();
             services.AddSingleton<TargetsReportService>();
-            services.Configure<PrometheusAgentOptions>(Configuration.GetSection("PROMETHEUS_AGENT"));
+            services.Configure<PrometheusAgentOptions>(Configuration.GetSection("PrometheusAgent"));
+
+            services.Configure<ExceptionProcessingOptions>(o => o.HideError = false);
 
 #if DEBUG
             services.Configure<ExceptionProcessingOptions>(o => o.HideError = false);
@@ -52,6 +53,8 @@ namespace MyLab.PrometheusAgent
             {
                 endpoints.MapControllers();
             });
+
+            app.UseStatusApi();
         }
     }
 }

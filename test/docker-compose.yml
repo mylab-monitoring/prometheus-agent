@@ -15,3 +15,46 @@ services:
     - ./target-2.conf:/etc/nginx/conf.d/default.conf
     ports:
     - "10201:80"
+  prometheus-agent-target-autocfg-1:
+    container_name: prometheus-agent-target-autocfg-1
+    image: nginx
+    ports:
+    - "10202:80"
+    labels:
+      foo: label_foo
+      metrics_bar: label_bar
+  prometheus-agent-target-autocfg-2:
+    container_name: prometheus-agent-target-autocfg-2
+    image: nginx
+    ports:
+    - "10203:12345"
+  prometheus-agent-target-autocfg-3:
+    container_name: prometheus-agent-target-autocfg-3
+    image: nginx
+    labels:
+      metrics_port: 12345
+  prometheus-agent-target-autocfg-4:
+    container_name: prometheus-agent-target-autocfg-4
+    image: nginx
+    labels:
+      metrics_path: /foo
+  prometheus-agent-target-autocfg-5:
+    container_name: prometheus-agent-target-autocfg-5
+    image: nginx
+    labels:
+      metrics_exclude: true
+  prometheus-agent-target-autocfg-6:
+    container_name: prometheus-agent-target-autocfg-6
+    image: nginx
+    labels:
+      metrics_exclude: false
+  prometheus-agent-target-autocfg-7:
+    container_name: prometheus-agent-target-autocfg-7
+    image: nginx
+    labels:
+      metrics_include: true
+  prometheus-agent-target-autocfg-8:
+    container_name: prometheus-agent-target-autocfg-8
+    image: nginx
+    labels:
+      metrics_include: false

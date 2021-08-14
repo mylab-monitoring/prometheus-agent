@@ -42,19 +42,32 @@ namespace MyLab.PrometheusAgent
             
         }
 
-        public MetricModel AddLabels(IDictionary<string, string> addLabels)
+        public MetricModel AddLabels(IEnumerable<KeyValuePair<string, string>> addLabels)
         {
-            var newLabels = new List<KeyValuePair<string, string>>();
+            var newLabels = new Dictionary<string, string>();
 
-            if(Labels != null)
-                newLabels.AddRange(Labels);
+            if (Labels != null)
+            {
+                foreach (var label in Labels)
+                {
+                    newLabels.Add(label.Key, label.Value);
+                }
+            }
 
             if (addLabels != null)
-                newLabels.AddRange(addLabels);
+            {
+                foreach (var label in addLabels)
+                {
+                    if (newLabels.ContainsKey(label.Key))
+                        newLabels[label.Key] = label.Value;
+                    else
+                        newLabels.Add(label.Key, label.Value);
+                }
+            }
 
             var newLabelsDict = newLabels.ToDictionary(
-                        itm => itm.Key,
-                        itm => itm.Value);
+                itm => itm.Key,
+                itm => itm.Value);
 
             return new MetricModel
             {

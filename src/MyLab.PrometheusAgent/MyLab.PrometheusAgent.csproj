@@ -5,6 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Docker.DotNet" Version="3.125.4" />
     <PackageReference Include="MyLab.Log" Version="3.1.5" />
     <PackageReference Include="MyLab.Log.Dsl" Version="3.1.2" />
     <PackageReference Include="MyLab.StatusProvider" Version="1.5.9" />

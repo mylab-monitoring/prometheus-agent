@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using MyLab.PrometheusAgent.Model;
 using MyLab.PrometheusAgent.Tools;
 using Xunit;
 
@@ -19,10 +20,10 @@ namespace UnitTests
 
             //Assert
             Assert.NotNull(config);
-            Assert.NotNull(config.Items);
-            Assert.Equal(2, config.Items.Length);
+            Assert.NotNull(config.Jobs);
+            Assert.Equal(2, config.Jobs.Length);
 
-            var item1 = config.Items[0];
+            var item1 = config.Jobs[0];
 
             Assert.Equal("env-metrics", item1.JobName);
             Assert.NotNull(item1.StaticConfigs);
@@ -46,7 +47,7 @@ namespace UnitTests
             Assert.True(item1Config2.Labels.ContainsKey("host"));
             Assert.Equal("infonot-prod-facade", item1Config2.Labels["host"]);
 
-            var item2 = config.Items[1];
+            var item2 = config.Jobs[1];
 
             Assert.Equal("proxy-metrics", item2.JobName);
             Assert.Single(item2.StaticConfigs);

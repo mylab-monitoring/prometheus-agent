@@ -12,9 +12,11 @@
     "IIS Express": {
       "commandName": "IISExpress",
       "launchBrowser": true,
-      "launchUrl": "config",
+      "launchUrl": "metrics",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "PrometheusAgent__Docker__Socket": "npipe://./pipe/docker_engine",
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "PrometheusAgent__Docker__Strategy": "All"
       }
     },
     "MyLab.PrometheusAgent": {

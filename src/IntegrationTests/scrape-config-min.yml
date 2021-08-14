@@ -1,6 +1,7 @@
 ﻿scrape_configs:
 
 - job_name: job1
+  metrics_path: /metrics-path
   static_configs:
   - targets:
     - localhost:10200
