@@ -155,7 +155,7 @@ namespace MyLab.PrometheusAgent.Tools
                 }
                 else
                 {
-                    newLabels.Add("container_label_" + NormKey(l.Key), l.Value);
+                    newLabels.Add("container_label_" + NormKey(l.Key), l.Value.Replace('\"', '\''));
                 }
             }
 
