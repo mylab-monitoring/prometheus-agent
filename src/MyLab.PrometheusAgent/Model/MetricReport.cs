@@ -6,9 +6,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using MyLab.Log.Dsl;
-using MyLab.PrometheusAgent.Model;
 
-namespace MyLab.PrometheusAgent.Tools
+namespace MyLab.PrometheusAgent.Model
 {
     public class MetricReport : Collection<MetricReportItem>
     {
