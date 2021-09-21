@@ -79,24 +79,6 @@ namespace MyLab.PrometheusAgent
             };
         }
 
-        public async Task WriteAsync(StringWriter stringWriter)
-        {
-            if(Type != null) 
-                await stringWriter.WriteLineAsync($"# TYPE {Name} {Type}");
-            await stringWriter.WriteAsync($"{Name} {{");
-            await stringWriter.WriteAsync(
-                string.Join(",", 
-                    Labels.Select(l => $"{l.Key}=\"{l.Value}\"")
-                ));
-            await stringWriter.WriteAsync("} ");
-            await stringWriter.WriteAsync(Value.ToString("F2", CultureInfo.InvariantCulture));
-
-            if (TimeStamp.HasValue)
-                await stringWriter.WriteAsync(" " + TimeStamp.Value);
-
-            await stringWriter.WriteLineAsync();
-        }
-
         public static async Task<MetricModel> ReadAsync(string str)
         {
             var rdr = new StringReader(str);

@@ -95,50 +95,6 @@ namespace UnitTests
             Assert.Null(metric.TimeStamp);
         }
 
-        [Theory]
-        [InlineData(null)]
-        [InlineData("01.01.2021 21:00")]
-        public async Task ShouldWriteAsString(string dateTimeStr)
-        {
-            //Arrange
-            var metricLabels = new Dictionary<string, string>
-            {
-                {"bar_key", "bar_value"}
-            };
-
-            DateTime? dateTime = dateTimeStr != null
-                ? DateTime.Parse(dateTimeStr)
-                : (DateTime?) null;
-
-            var originalMetric = new  MetricModel(
-                "foo", 
-                "gauge", 
-                1.1d, 
-                dateTime,
-                metricLabels);
-            
-            var metricStringBuilder = new StringBuilder();
-            var stringWriter = new StringWriter(metricStringBuilder);
-
-            //Act
-            await originalMetric.WriteAsync(stringWriter);
-
-            var metricString = metricStringBuilder.ToString();
-            _output.WriteLine(metricString);
-
-            var actualMetric = await MetricModel.ReadAsync(metricString);
-
-            //Assert
-            Assert.Equal(originalMetric.Name, actualMetric.Name);
-            Assert.Equal(originalMetric.Type, actualMetric.Type);
-            Assert.Equal(originalMetric.Value, actualMetric.Value);
-            Assert.Equal(originalMetric.Labels, actualMetric.Labels);
-            Assert.Equal(originalMetric.TimeStamp, actualMetric.TimeStamp);
-
-            if(dateTime.HasValue)
-                Assert.Equal(dateTime, new DateTime(1970, 1, 1).AddMilliseconds(actualMetric.TimeStamp.Value));
-        }
-
         [Fact]
         public async Task ShouldParseRealMetrics()
         {

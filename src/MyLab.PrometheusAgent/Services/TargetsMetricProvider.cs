@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MyLab.Log.Dsl;
 using MyLab.PrometheusAgent.Model;
+using MyLab.PrometheusAgent.Tools;
 
 namespace MyLab.PrometheusAgent.Services
 {
@@ -49,7 +50,7 @@ namespace MyLab.PrometheusAgent.Services
                 : TimeSpan.FromMinutes(1);
         }
 
-        public async Task<MetricModel[]> ProvideAsync()
+        public async Task<MetricReport> ProvideAsync()
         {
             await InitSourcesAsync();
 
@@ -83,7 +84,7 @@ namespace MyLab.PrometheusAgent.Services
                     .Write();
             }
 
-            return resultMetrics.ToArray();
+            return MetricReport.Create(resultMetrics.ToArray());
         }
 
         private async Task InitSourcesAsync()

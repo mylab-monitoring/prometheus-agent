@@ -26,16 +26,13 @@ namespace MyLab.PrometheusAgent.Controllers
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            var metrics = await _targetsMetricProvider.ProvideAsync();
+            var metricsReport = await _targetsMetricProvider.ProvideAsync();
             
             var resultBuilder = new StringBuilder();
             var resultWriter = new StringWriter(resultBuilder);
 
-            foreach (var metric in metrics)
-            {
-                await metric.WriteAsync(resultWriter);
-            }
-
+            await metricsReport.WriteAsync(resultWriter);
+            
             return Ok(resultBuilder.ToString());
         }
     }
