@@ -55,39 +55,45 @@ namespace IntegrationTests
                 m.Labels["instance"] == "localhost:10200" &&
                 m.Labels["target_batch"] == "1" &&
                 m.Labels["job"] == "job1");
-            var job1Batch1Metric2 = metrics.FirstOrDefault(m =>
-                m.Name == "bar_metric" && 
-                m.Labels["instance"] == "localhost:10201" &&
-                m.Labels["target_batch"] == "1" &&
-                m.Labels["job"] == "job1");
-
-            Assert.NotNull(job1Batch1Metric1);
-            Assert.Equal("gauge", job1Batch1Metric1.Type);
-            Assert.Equal(5, job1Batch1Metric1.Labels.Count);
-            Assert.Equal("value1", job1Batch1Metric1.Labels["label1"]);
-            Assert.Equal("value2", job1Batch1Metric1.Labels["label2"]);
-            Assert.Null(job1Batch1Metric1.TimeStamp);
-
-            Assert.NotNull(job1Batch1Metric2);
-            Assert.Equal("counter", job1Batch1Metric2.Type);
-            Assert.Equal(5, job1Batch1Metric2.Labels.Count);
-            Assert.Equal("value3", job1Batch1Metric2.Labels["label3"]);
-            Assert.Equal("value4", job1Batch1Metric2.Labels["label4"]);
-            Assert.Equal(originTimeStamp, job1Batch1Metric2.TimeStamp);
-
             var job1Batch2Metric1 = metrics.FirstOrDefault(m =>
                 m.Name == "foo_metric" &&
                 m.Labels["instance"] == "localhost:10200" &&
                 m.Labels["target_batch"] == "2" &&
+                m.Labels["job"] == "job1");
+            var job2Batch1Metric1 = metrics.FirstOrDefault(m =>
+                m.Name == "foo_metric" &&
+                m.Labels["instance"] == "localhost:10200" &&
+                m.Labels["job"] == "job2");
+
+
+            var job1Batch1Metric2 = metrics.FirstOrDefault(m =>
+                m.Name == "bar_metric" && 
+                m.Labels["instance"] == "localhost:10201" &&
+                m.Labels["target_batch"] == "1" &&
                 m.Labels["job"] == "job1");
             var job1Batch2Metric2 = metrics.FirstOrDefault(m =>
                 m.Name == "bar_metric" &&
                 m.Labels["instance"] == "localhost:10201" &&
                 m.Labels["target_batch"] == "2" &&
                 m.Labels["job"] == "job1");
+            var job2Batch1Metric2 = metrics.FirstOrDefault(m =>
+                m.Name == "bar_metric" &&
+                m.Labels["instance"] == "localhost:10201" &&
+                m.Labels["job"] == "job2");
+
+            Assert.NotNull(job1Batch1Metric1);
+            Assert.Equal(5, job1Batch1Metric1.Labels.Count);
+            Assert.Equal("value1", job1Batch1Metric1.Labels["label1"]);
+            Assert.Equal("value2", job1Batch1Metric1.Labels["label2"]);
+            Assert.Null(job1Batch1Metric1.TimeStamp);
+
+            Assert.NotNull(job1Batch1Metric2);
+            Assert.Equal(5, job1Batch1Metric2.Labels.Count);
+            Assert.Equal("value3", job1Batch1Metric2.Labels["label3"]);
+            Assert.Equal("value4", job1Batch1Metric2.Labels["label4"]);
+            Assert.Equal(originTimeStamp, job1Batch1Metric2.TimeStamp);
 
             Assert.NotNull(job1Batch2Metric1);
-            Assert.Equal("gauge", job1Batch2Metric1.Type);
             Assert.Equal("foo_metric", job1Batch2Metric1.Name);
             Assert.Equal(5, job1Batch2Metric1.Labels.Count);
             Assert.Equal("value1", job1Batch2Metric1.Labels["label1"]);
@@ -95,24 +101,13 @@ namespace IntegrationTests
             Assert.Null(job1Batch2Metric1.TimeStamp);
 
             Assert.NotNull(job1Batch2Metric2);
-            Assert.Equal("counter", job1Batch2Metric2.Type);
             Assert.Equal("bar_metric", job1Batch2Metric2.Name);
             Assert.Equal(5, job1Batch2Metric2.Labels.Count);
             Assert.Equal("value3", job1Batch2Metric2.Labels["label3"]);
             Assert.Equal("value4", job1Batch2Metric2.Labels["label4"]);
             Assert.Equal(originTimeStamp, job1Batch2Metric2.TimeStamp);
 
-            var job2Batch1Metric1 = metrics.FirstOrDefault(m =>
-                m.Name == "foo_metric" &&
-                m.Labels["instance"] == "localhost:10200" &&
-                m.Labels["job"] == "job2");
-            var job2Batch1Metric2 = metrics.FirstOrDefault(m =>
-                m.Name == "bar_metric" &&
-                m.Labels["instance"] == "localhost:10201" &&
-                m.Labels["job"] == "job2");
-
             Assert.NotNull(job2Batch1Metric1);
-            Assert.Equal("gauge", job2Batch1Metric1.Type);
             Assert.Equal(5, job2Batch1Metric1.Labels.Count);
             Assert.Equal("value1", job2Batch1Metric1.Labels["label1"]);
             Assert.Equal("value2", job2Batch1Metric1.Labels["label2"]);
@@ -120,12 +115,14 @@ namespace IntegrationTests
             Assert.Null(job2Batch1Metric1.TimeStamp);
 
             Assert.NotNull(job2Batch1Metric2);
-            Assert.Equal("counter", job2Batch1Metric2.Type);
             Assert.Equal(5, job2Batch1Metric2.Labels.Count);
             Assert.Equal("value3", job2Batch1Metric2.Labels["label3"]);
             Assert.Equal("value4", job2Batch1Metric2.Labels["label4"]);
             Assert.Equal("1", job2Batch1Metric2.Labels["target_batch"]);
             Assert.Equal(originTimeStamp, job2Batch1Metric2.TimeStamp);
+
+            Assert.Equal("gauge", job1Batch1Metric1.Type ?? job1Batch2Metric1.Type ?? job2Batch1Metric1.Type);
+            Assert.Equal("counter", job2Batch1Metric2.Type ?? job1Batch2Metric2.Type ?? job1Batch1Metric2.Type);
         }
 
         [Fact]
