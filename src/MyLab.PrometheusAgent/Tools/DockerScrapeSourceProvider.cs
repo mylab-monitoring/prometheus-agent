@@ -127,6 +127,8 @@ namespace MyLab.PrometheusAgent.Tools
 
             var newLabels = RetrieveLabels(cLabels);
 
+            newLabels.Add("instance", $"{normHost}:{port}");
+
             return new ScrapeSourceDescription(url, newLabels);
         }
 
@@ -153,7 +155,7 @@ namespace MyLab.PrometheusAgent.Tools
                 }
                 else
                 {
-                    newLabels.Add("container_label_" + NormKey(l.Key), l.Value);
+                    newLabels.Add("container_label_" + NormKey(l.Key), l.Value.Replace('\"', '\''));
                 }
             }
 

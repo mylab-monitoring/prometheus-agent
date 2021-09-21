@@ -1,6 +1,8 @@
 # MyLab.PrometheusAgent
 [![Docker image](https://img.shields.io/docker/v/mylabtools/prometheus-agent?label=Docker%20image)](https://hub.docker.com/r/mylabtools/prometheus-agent)
 
+[![API specification](https://img.shields.io/badge/OAS3-oas3%20specifiecation-green)](https://app.swaggerhub.com/apis/ozzy/mylab-parometheus-agent/1)
+
 Ознакомьтесь с последними изменениями в [журнале изменений](/changelog.md).
 
 ## Обзор 
@@ -154,7 +156,7 @@ foo_metric {label1="value1",label2="value2",target_batch="1",instance="localhost
 
 Метки контейнера, начинающиеся с `metrics_`, рассматриваются, применются к мерикам, как метки с именем без этого префикса. Например, метка контенера `metric_host: dev-app.corp`, при этом к метрикам контейнера будет добавлена метка `host: "dev-app.corp".`  
 
-Все остальные метки контенера будут добавлены к метрикам контейнера с префиксом в имени `container_label_`. При этом само имя метки будет нормализовано путём замены всех символов, кроме разрешённых (буквы, цифры, знаки `_`и `:` ), на `_`. Например, метка контенера `target.host: dev-app.corp`, при этом к метрикам контейнера будет добавлена метка `container_label_target_host: "dev-app.corp".`
+Все остальные метки контенера будут добавлены к метрикам контейнера с префиксом в имени `container_label_`. При этом само имя метки будет нормализовано путём замены всех символов, кроме разрешённых (буквы, цифры, знаки `_`и `:` ), на `_`. Например, метка контенера `target.host: dev-app.corp`, при этом к метрикам контейнера будет добавлена метка `container_label_target_host: "dev-app.corp".` В значении метки будут заменён символ `"` на `'`.
 
 #### Служебные метки
 

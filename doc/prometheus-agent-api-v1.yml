@@ -1,0 +1,147 @@
+openapi: 3.0.0
+info:
+  title: MyLab.PromeheusAgent
+  version: '1'
+paths:
+  '/metrics':
+    get:
+      tags:
+      - Metrics
+      description: Collects and provides metrics 
+      responses:
+        '200':
+          description: Metrics
+          content:
+            text/plain:
+              schema:
+                type: string
+  '/report':
+    get:
+      tags:
+      - Service
+      description: Provides current scrape configuration
+      responses:
+        '200':
+          description: Provided scrape configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScrapeReport' 
+                
+  '/config':
+    get:
+      tags:
+      - Service
+      description: Provides current scrape configuration
+      responses:
+        '200':
+          description: Provided scrape configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScrapeConfig' 
+  
+components:
+      
+  schemas:
+  
+    ScrapeConfig:
+      type: array
+      description: Contains metric sources descriptions
+      items:
+        $ref: '#/components/schemas/ScrapeSourceConfig'
+        
+    ScrapeSourceConfig:
+      type: object
+      description: Contains metric source descriptions
+      properties:
+        ScrapeUrl:
+          description: Target service URL
+          type: string
+          format: url
+          example: 'http://service:80/metrics'
+        Labels:
+          type: object
+          description: Taget labels
+          additionalProperties:
+            type: string
+          example: 
+            log_format: syslog
+          
+    ScrapeReport:
+      type: array
+      description: Contains metric sources scraping report
+      items:
+        $ref: '#/components/schemas/ScrapeSourceReport'
+        
+    ScrapeSourceReport:
+      type: object
+      description: Contains metric source scraping report
+      properties:
+        Id:
+          type: string
+          description: Source identifier
+          example: 'http://service:80/metrics'
+        Dt:
+          type: string
+          format: date-time
+          description: Scraping date time
+          example: '1985-04-12T23:20:50'
+        Duration:
+          type: string
+          format: time-span
+          description: Elapsed time for scraping
+          example: '00:00:01.100'
+        Error:
+          $ref: '#/components/schemas/Exception'
+        ResponseVolume:
+          description: Respnse size (bytes)
+          type: integer
+          format: int64
+          example: 1024
+        MetricsCount:
+          description: Number oа received metrics
+          type: integer
+          format: int64
+          example: 300
+          
+    Exception:
+      type: object
+      description: Exception
+      properties:
+        Message:
+          type: string
+          description: A message that describes the current exception
+          example: 'The log table has overflowed'
+        StackTrace:
+          type: string
+          description: A string representation of the immediate frames on the call stack
+          example: >
+            at NDP_UE_CS.LogTable.AddRecord(String newRecord)
+            at NDP_UE_CS.OverflowDemo.Main()
+        Type:
+          type: string
+          description: '.NET class full name'
+          example: 'System.InvalidOperationException'
+        Aggregated:
+          type: array
+          description: A collection of the Exception instances that caused the current exception
+          items:
+            $ref: '#/components/schemas/Exception'
+        Inner:
+          $ref: '#/components/schemas/Exception'
+        Facts:
+          type: object
+          description: Contains log named facts with object values
+          additionalProperties: true
+          example: 
+            TargetDesc:
+              Id: 123
+              Size: big
+        Labels:
+          type: object
+          description: Contains log named labels with string values
+          example:
+            UserId: "123"
+          additionalProperties:
+            type: string
