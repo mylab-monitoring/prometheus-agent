@@ -19,11 +19,11 @@
 
 * RAM: **8 Gb**
 * CPU: **2х Intel(R) Xeon(R) CPU E5-2630 v4 @ 2.20GHz**
-* Целевых сервисов: **83**
+* Целевых сервисов: **100**
 
 | Решение                 | Потребление памяти | Потребление процессора |
 | ----------------------- | ------------------ | ---------------------- |
-| `MyLab.PrometheusAgent` | ~400 Mb            | ~2%                    |
+| `MyLab.PrometheusAgent` | ~250 Mb            | ~2%                    |
 | `Prometheus`            | ~1.2 Gb            | ~20%                   |
 
 ## API
@@ -60,6 +60,11 @@ foo_metric {label1="value1",label2="value2",target_batch="1",instance="localhost
   "Items": [
     {
       "JobName": "job1",
+      "State": {
+        "Enabled": true,
+        "Reason": null,
+        "Exception": null
+        },
       "StaticConfigs": [
         {
           "Targets": [

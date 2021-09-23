@@ -80,17 +80,17 @@ namespace IntegrationTests
         [InlineData(DockerDiscoveryStrategy.Include, "prometheus-agent-target-autocfg-5")]
         [InlineData(DockerDiscoveryStrategy.Include, "prometheus-agent-target-autocfg-6")]
         [InlineData(DockerDiscoveryStrategy.Include, "prometheus-agent-target-autocfg-8")]
-        public async Task ShouldExcludeByLabelAndDiscoveryStrategy(DockerDiscoveryStrategy strategy, string shouldNotBeFound)
+        public async Task ShouldExcludeByLabelAndDiscoveryStrategy(DockerDiscoveryStrategy strategy, string shouldBeDisabled)
         {
             //Arrange
             var provider = CreateProvider(strategy);
 
             //Act
             var selectedSources = await LoadTestContainers(provider);
-            var staticCfg = selectedSources.FirstOrDefault(c => c.ScrapeUrl.Host == shouldNotBeFound);
+            var staticCfg = selectedSources.FirstOrDefault(c => c.ScrapeUrl.Host == shouldBeDisabled);
 
             //Assert
-            Assert.Null(staticCfg);
+            Assert.False(staticCfg.State.Enabled);
         }
 
         [Fact]
