@@ -60,46 +60,56 @@ namespace MyLab.PrometheusAgent.Tools
                     .AndFactIs("docker-sock", _dockerSock);
             }
 
-            var activeContainers = containerList.Where(c => c.State == "running");
+            var resultSources = new List<ScrapeSourceDescription>();
 
-            switch (_discoveryStrategy)
+            foreach (var container in containerList)
             {
-                case DockerDiscoveryStrategy.All:
+                ScrapeSourceStateDescription stateDesc;
 
-                    activeContainers = activeContainers.Where(c =>
+                if (container.State == "running")
+                {
+                    switch (_discoveryStrategy)
                     {
-                        if (c.Labels.TryGetValue("metrics_exclude", out var strBool))
-                        {
-                            if (bool.TryParse(strBool, out var excludeFlag))
-                                return !excludeFlag;
-                        }
+                        case DockerDiscoveryStrategy.All:
 
-                        return true;
-                    });
+                            bool exclude =
+                                container.Labels.TryGetValue("metrics_exclude", out var exclBool) &&
+                                bool.TryParse(exclBool, out var excludeFlag) &&
+                                excludeFlag;
 
-                    break;
-                case DockerDiscoveryStrategy.Include:
+                            stateDesc = exclude
+                                ? new ScrapeSourceStateDescription(false, "metrics_exclude")
+                                : new ScrapeSourceStateDescription(true, "DockerDiscoveryStrategy.All");
 
-                    activeContainers = activeContainers.Where(c =>
-                    {
-                        if (c.Labels.TryGetValue("metrics_include", out var strBool))
-                        {
-                            if (bool.TryParse(strBool, out var includeFlag))
-                                return includeFlag;
-                        }
+                            break;
+                        case DockerDiscoveryStrategy.Include:
 
-                        return false;
-                    });
+                            bool include =
+                                container.Labels.TryGetValue("metrics_include", out var inclBool) &&
+                                bool.TryParse(inclBool, out var includeFlag) &&
+                                includeFlag;
 
-                    break;
+                            stateDesc = include
+                                ? new ScrapeSourceStateDescription(true, "metrics_include")
+                                : new ScrapeSourceStateDescription(false, "DockerDiscoveryStrategy.Include");
+
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+                }
+                else
+                {
+                    stateDesc = new ScrapeSourceStateDescription(false, $"Container.State != 'running' ({container.State})");
+                }
+
+                resultSources.Add(ContainerToDesc(container, stateDesc));
             }
 
-            return activeContainers
-                .Select(ContainerToDesc)
-                .ToArray();
+            return resultSources.ToArray();
         }
 
-        private ScrapeSourceDescription ContainerToDesc(ContainerListResponse container)
+        private ScrapeSourceDescription ContainerToDesc(ContainerListResponse container, ScrapeSourceStateDescription stateDescription)
         {
             string host = container.Names.FirstOrDefault() ?? container.NetworkSettings?.Networks?.FirstOrDefault().Value.IPAddress;
 
@@ -128,8 +138,8 @@ namespace MyLab.PrometheusAgent.Tools
             var newLabels = RetrieveLabels(cLabels);
 
             newLabels.Add("instance", $"{normHost}:{port}");
-
-            return new ScrapeSourceDescription(url, newLabels);
+            
+            return new ScrapeSourceDescription(url, newLabels, stateDescription);
         }
 
         private Dictionary<string, string> RetrieveLabels(Dictionary<string, string> cLabels)

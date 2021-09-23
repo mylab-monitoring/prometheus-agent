@@ -66,7 +66,10 @@ namespace MyLab.PrometheusAgent.Tools
                                         labels.Add("job", job.JobName);
                                 }
 
-                                resultList.Add(new ScrapeSourceDescription(url, labels));
+                                var scrapeSourceState = new ScrapeSourceStateDescription(true);
+                                var scrapeSourceDesc = new ScrapeSourceDescription(url, labels, scrapeSourceState);
+                                
+                                resultList.Add(scrapeSourceDesc);
                             }
                         }
                     }

@@ -100,6 +100,7 @@ namespace MyLab.PrometheusAgent.Services
 
             var sourceDescriptions = await _scrapeSourcesService.ProvideAsync().ContinueWith(t => t.Result);
             _metricSources = sourceDescriptions
+                .Where(d => d.State.Enabled)
                 .Select(d => new MetricSource(d.ScrapeUrl, _scrapeTimeout, d.Labels)
                 {
                     Log = _logger
