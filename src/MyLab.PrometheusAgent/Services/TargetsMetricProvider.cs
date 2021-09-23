@@ -60,6 +60,7 @@ namespace MyLab.PrometheusAgent.Services
             var loadTasks = _metricSources
                 .Select(async s =>
                 {
+
                     var scrapingResult = await s.ScrapeMetricsAsync();
 
                     lock (resultMetricSync)
@@ -76,7 +77,7 @@ namespace MyLab.PrometheusAgent.Services
             {
                 Task.WaitAll(loadTasks, _surveyTimeout);
             }
-            catch (TimeoutException)
+            catch (AggregateException e) when(e.InnerException != null && e.InnerException.GetType() == typeof(TaskCanceledException))
             {
                 _logger.Error("Can't scrape targets: timeout")
                     .AndFactIs("scrape-timeout", _scrapeTimeout)

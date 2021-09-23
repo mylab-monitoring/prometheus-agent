@@ -54,33 +54,23 @@ namespace MyLab.PrometheusAgent.Model
                 Report = report
             };
 
-            var sw = new Stopwatch();
-            sw.Start();
-
             try
             {
-                httpResponse = await HttpClient.GetAsync("");
-                report.ResponseVolume = httpResponse.Content.Headers.ContentLength.GetValueOrDefault(-1);
-            }
-            catch (HttpRequestException httpEx)
-            {
-                report.Error = ExceptionDto.Create(httpEx);
+                var sw = new Stopwatch();
+                sw.Start();
 
-                Log?.Warning("Cant get metrics")
-                    .AndFactIs("target", Id)
-                    .AndFactIs("error-msg", httpEx.Message)
-                    .Write();
+                try
+                {
+                    httpResponse = await HttpClient.GetAsync("");
+                    report.ResponseVolume = httpResponse.Content.Headers.ContentLength.GetValueOrDefault(-1);
+                }
+                finally
+                {
+                    sw.Stop();
+                    report.Duration = sw.Elapsed;
+                }
 
-                return scrapingResult;
-            }
-            finally
-            {
-                sw.Stop();
-                report.Duration = sw.Elapsed;
-            }
-            
-            try
-            {
+
                 if (httpResponse.IsSuccessStatusCode)
                 {
                     var mediaType = httpResponse.Content.Headers.ContentType?.MediaType;
@@ -119,9 +109,8 @@ namespace MyLab.PrometheusAgent.Model
                 }
                 else
                 {
-                    Log?.Warning("Metric target return bad response code")
-                        .AndFactIs("http-code", $"{(int)httpResponse.StatusCode}({httpResponse.ReasonPhrase})")
-                        .Write();
+                    throw new InvalidOperationException("Metric target return bad response code")
+                        .AndFactIs("http-code", $"{(int) httpResponse.StatusCode}({httpResponse.ReasonPhrase})");
                 }
             }
             catch (Exception e)
