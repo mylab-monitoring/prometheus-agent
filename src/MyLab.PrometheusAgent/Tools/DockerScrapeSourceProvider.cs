@@ -138,6 +138,7 @@ namespace MyLab.PrometheusAgent.Tools
             var newLabels = RetrieveLabels(cLabels);
 
             newLabels.Add("instance", $"{normHost}:{port}");
+            newLabels.Add("container_name", host);
             
             return new ScrapeSourceDescription(url, newLabels, stateDescription);
         }
