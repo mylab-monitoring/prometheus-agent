@@ -58,9 +58,7 @@ namespace MyLab.PrometheusAgent
             {
                 foreach (var label in addLabels)
                 {
-                    if (newLabels.ContainsKey(label.Key))
-                        newLabels[label.Key] = label.Value;
-                    else
+                    if (!newLabels.ContainsKey(label.Key))
                         newLabels.Add(label.Key, label.Value);
                 }
             }
