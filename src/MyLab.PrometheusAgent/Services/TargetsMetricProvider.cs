@@ -57,16 +57,21 @@ namespace MyLab.PrometheusAgent.Services
             var resultMetrics = new List<MetricModel>();
             var resultMetricSync = new object();
             
+            var nullNameMetrics = new Dictionary<string, int>();
+
             var loadTasks = _metricSources
                 .Select(async s =>
                 {
-
                     var scrapingResult = await s.ScrapeMetricsAsync();
 
                     lock (resultMetricSync)
                     {
                         if (scrapingResult.Metrics != null)
+                        {
                             resultMetrics.AddRange(scrapingResult.Metrics);
+
+                            RegNullNameMetric(s.Id, scrapingResult.Metrics.Count(m => m.Name == null));
+                        }
 
                         _targetsReportService.Report(scrapingResult.Report);
                     }
@@ -85,7 +90,28 @@ namespace MyLab.PrometheusAgent.Services
                     .Write();
             }
 
+            if (nullNameMetrics.Count != 0)
+            {
+                _logger.Warning("Found metrics with 'null' names")
+                    .AndFactIs("count", nullNameMetrics)
+                    .Write();
+            }
+
             return MetricReport.Create(resultMetrics.ToArray());
+
+            void RegNullNameMetric(string sourceId, int count)
+            {
+                if (count == 0) return;
+
+                if(nullNameMetrics.TryGetValue(sourceId, out var actualCount))
+                {
+                    nullNameMetrics[sourceId] = actualCount + count;
+                }
+                else
+                {
+                    nullNameMetrics.Add(sourceId, count);
+                }
+            }
         }
 
         private async Task InitSourcesAsync()

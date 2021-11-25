@@ -22,27 +22,29 @@ namespace MyLab.PrometheusAgent.Model
 
             foreach (var metric in metrics)
             {
-                if (reportData.TryGetValue(metric.Name, out var foundItem))
+                if (metric.Name != null)
                 {
-                    if (foundItem.Type == null)
-                        foundItem.Type = metric.Type;
-
-                    if (metric.Type != null && foundItem.Type != metric.Type)
+                    if (reportData.TryGetValue(metric.Name, out var foundItem))
                     {
-                        logger?.Dsl().Error("Metric type conflict. Second metric will be ignored.")
-                            .AndFactIs("metric-name", metric.Name)
-                            .AndFactIs("metric-type1", foundItem.Type)
-                            .AndFactIs("metric-type2", metric.Type)
-                            .Write();
+                        foundItem.Type ??= metric.Type;
+
+                        if (metric.Type != null && foundItem.Type != metric.Type)
+                        {
+                            logger?.Dsl().Error("Metric type conflict. Second metric will be ignored.")
+                                .AndFactIs("metric-name", metric.Name)
+                                .AndFactIs("metric-type1", foundItem.Type)
+                                .AndFactIs("metric-type2", metric.Type)
+                                .Write();
+                        }
+                        else
+                        {
+                            foundItem.Metrics.Add(metric);
+                        }
                     }
                     else
                     {
-                        foundItem.Metrics.Add(metric);
+                        reportData.Add(metric.Name, (metric.Name, metric.Type, new List<MetricModel> {metric}));
                     }
-                }
-                else
-                {
-                    reportData.Add(metric.Name, (metric.Name, metric.Type, new List<MetricModel>{ metric }));
                 }
             }
 
