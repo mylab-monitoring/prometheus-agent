@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,7 +11,7 @@ namespace MyLab.PrometheusAgent.Controllers
 {
     [ApiController]
     [Route("metrics")]
-    public class MetricsController : ControllerBase
+    public class MetricsController : ControllerBase, IDisposable
     {
         private readonly ITargetsMetricProvider _targetsMetricProvider;
         private readonly ILogger<MetricsController> _logger;
@@ -30,10 +31,17 @@ namespace MyLab.PrometheusAgent.Controllers
             
             var resultBuilder = new StringBuilder();
             var resultWriter = new StringWriter(resultBuilder);
-
-            await metricsReport.WriteAsync(resultWriter);
             
-            return Ok(resultBuilder.ToString());
+            await metricsReport.WriteAsync(resultWriter);
+
+            var result = resultBuilder.ToString();
+
+            return Ok(result);
+        }
+
+        public void Dispose()
+        {
+            GC.Collect();
         }
     }
 }
