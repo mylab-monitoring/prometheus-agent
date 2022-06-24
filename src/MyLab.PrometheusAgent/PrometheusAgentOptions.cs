@@ -16,6 +16,8 @@ namespace MyLab.PrometheusAgent
         public string Socket { get; set; } = "unix:///var/run/docker.sock";
         public Dictionary<string, string> Labels { get; set; }
         public bool DisableServiceContainerLabels { get; set; } = true;
+
+        public string[] ServiceLabelsWhiteList { get; set; }
     }
 
     public enum DockerDiscoveryStrategy
