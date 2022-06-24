@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using MartinCostello.Logging.XUnit;
+using MyLab.Log;
 using MyLab.Log.Dsl;
 using MyLab.PrometheusAgent;
 using MyLab.PrometheusAgent.Model;
@@ -23,11 +24,12 @@ namespace IntegrationTests
             _logger = logger.Dsl();
         }
 
-        DockerScrapeSourceProvider CreateProvider(DockerDiscoveryStrategy discoveryStrategy)
+        DockerScrapeSourceProvider CreateProvider(DockerDiscoveryStrategy discoveryStrategy, ServiceLabelExcludeLogic excludeLogic = null)
         {
             return new DockerScrapeSourceProvider("npipe://./pipe/docker_engine", discoveryStrategy)
             {
-                Log = _logger
+                Log = _logger,
+                ExcludeLogic = excludeLogic
             };
         }
 
@@ -108,6 +110,24 @@ namespace IntegrationTests
 
             //Assert
             Assert.Equal("label_foo", labelValue);
+        }
+
+        [Fact]
+        public async Task ShouldExcludeRegularContainerLabels()
+        {
+            //Arrange
+            var excludeLogic = new ServiceLabelExcludeLogic();
+            var provider = CreateProvider(DockerDiscoveryStrategy.All, excludeLogic);
+
+            //Act
+            var selectedSources = await LoadTestContainers(provider);
+
+            var staticCfg = selectedSources.FirstOrDefault(c => c.ScrapeUrl.Host == "prometheus-agent-target-autocfg-1");
+
+            var found = staticCfg.Labels.TryGetValue("container_label_foo", out var labelValue);
+
+            //Assert
+            Assert.False(found);
         }
 
         [Fact]
