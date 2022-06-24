@@ -26,12 +26,20 @@ namespace MyLab.PrometheusAgent.Services
                 _configProviders.Add(new FileScrapeSourceProvider(options.ScrapeConfig));
 
             if (options.Docker.Strategy != DockerDiscoveryStrategy.None)
-                _configProviders.Add(new DockerScrapeSourceProvider(options.Docker.Socket, options.Docker.Strategy)
+            {
+                var excludeLogic = options.Docker.DisableServiceContainerLabels
+                    ? new ServiceLabelExcludeLogic(options.Docker.ServiceLabelsWhiteList)
+                    : null;
+
+                var srcProvider = new DockerScrapeSourceProvider(options.Docker.Socket, options.Docker.Strategy)
                 {
                     Log = logger.Dsl(),
                     AdditionalLabels = options.Docker.Labels,
-                    ExcludeServiceLabels = options.Docker.DisableServiceContainerLabels
-                });
+                    ExcludeLogic = excludeLogic
+                };
+
+                _configProviders.Add(srcProvider);
+            }
         }
 
         public async Task<ScrapeSourceDescription[]> ProvideAsync()

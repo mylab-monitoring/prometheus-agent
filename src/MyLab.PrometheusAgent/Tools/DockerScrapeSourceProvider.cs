@@ -17,19 +17,9 @@ namespace MyLab.PrometheusAgent.Tools
         private readonly DockerDiscoveryStrategy _discoveryStrategy;
         private readonly DockerClient _client;
 
-        private static readonly string[] ExactlyServiceLabels = new[]
-        {
-            "maintainer"
-        };
-
-        private static readonly string[] ServiceLabelsStartWith = new[]
-        {
-            "com.docker.compose.",
-            "desktop.docker."
-        };
         public IDslLogger Log { get; set; }
         public IDictionary<string,string> AdditionalLabels { get; set; }
-        public bool ExcludeServiceLabels { get; set; }
+        public ServiceLabelExcludeLogic ExcludeLogic { get; set; }
 
         public DockerScrapeSourceProvider(string dockerSock, DockerDiscoveryStrategy discoveryStrategy)
         {
@@ -149,16 +139,8 @@ namespace MyLab.PrometheusAgent.Tools
 
             foreach (var l in cLabels)
             {
-                if (ExcludeServiceLabels)
-                {
-                    var labelExactlyService = ExactlyServiceLabels.Contains(l.Key);
-                    var labelStartsWithServiceStart = ServiceLabelsStartWith.Any(sl => l.Key.StartsWith(sl));
-
-                    if (labelExactlyService || labelStartsWithServiceStart)
-                    {
-                        continue;
-                    }
-                }
+                if (ExcludeLogic != null && ExcludeLogic.ShouldExcludeLabel(l.Key))
+                    continue;
 
                 if (l.Key.StartsWith("metrics_"))
                 {

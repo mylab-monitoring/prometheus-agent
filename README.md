@@ -121,7 +121,8 @@ foo_metric {label1="value1",label2="value2",target_batch="1",instance="localhost
   * `Strategy` - [стратегия обнаружения](#Стратегии-обнаружения). `None` - по умолчанию.
   * `Socket` - путь к `docker`-сокету. По умолчанию: `unix:///var/run/docker.sock`;
   * `Labels` - именованные дополнительные метки для всех контейнеров;
-  * `DisableServiceContainerLabels` - флаг, указывающий на исключение служеюных меток из меток контенйера.
+  * `DisableServiceContainerLabels` - флаг, указывающий на исключение служеюных меток из меток контенйера;
+  * `ServiceLabelsWhiteList` - массив имён служебных меток, которые следует оставить при их общем исключении.
 
 ### Docker Discovery
 
