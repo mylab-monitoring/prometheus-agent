@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using MyLab.Log;
+using MyLab.PrometheusAgent.Tools;
 
 namespace MyLab.PrometheusAgent
 {
@@ -125,33 +126,24 @@ namespace MyLab.PrometheusAgent
                 if (labelsStart != -1 && labelsEnd != -1)
                 {
                     var labelsSubstring = bodyString.Substring(labelsStart + 1, labelsEnd - labelsStart - 1);
-                    var lines = labelsSubstring
-                        .Split(',')
-                        .Select(v => 
-                            new
-                            {
-                                Value = v, 
-                                SplitPos = v.IndexOf('=')
-                            })
-                        .ToArray();
 
-                    var wrongFormatLabelLines = lines
-                        .Where(l => l.SplitPos < 0)
-                        .ToArray();
+                    var labels = new List<LabelFromString>();
 
-                    if (wrongFormatLabelLines.Length > 0)
+                    try
                     {
-                        throw new FormatException("Labels substring has wrong format")
-                            .AndFactIs("labels-substring", labelsSubstring)
-                            .AndFactIs("wrong-labels", wrongFormatLabelLines.Select(l => l.Value));
+                        using var labelsReader = new StringReader(labelsSubstring);
+                        
+                        while (LabelFromString.Read(labelsReader) is { } readLabel)
+                            labels.Add(readLabel);   
+                    }
+                    catch (Exception e)
+                    {
+                        throw new FormatException("Labels parsing error", e)
+                            .AndFactIs("labels-substring", labelsSubstring);
                     }
 
-                    var labels = lines
-                        .ToDictionary(
-                            v => v.Value.Remove(v.SplitPos).Trim(),
-                            v => v.Value.Substring(v.SplitPos + 1).Trim('\"', ' '));
-
-                    metric.Labels = new ReadOnlyDictionary<string, string>(labels);
+                    metric.Labels = new ReadOnlyDictionary<string, string>(
+                        labels.ToDictionary(l=>l.Name, l=> l.Value));
                 }
 
                 var valueString = labelsEnd != -1
