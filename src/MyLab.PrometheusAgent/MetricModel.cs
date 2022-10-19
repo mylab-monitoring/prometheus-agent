@@ -124,10 +124,29 @@ namespace MyLab.PrometheusAgent
 
                 if (labelsStart != -1 && labelsEnd != -1)
                 {
-                    var labels = bodyString
-                        .Substring(labelsStart + 1, labelsEnd - labelsStart - 1)
+                    var labelsSubstring = bodyString.Substring(labelsStart + 1, labelsEnd - labelsStart - 1);
+                    var lines = labelsSubstring
                         .Split(',')
-                        .Select(v => new {Value = v, SplitPos = v.IndexOf('=')})
+                        .Select(v => 
+                            new
+                            {
+                                Value = v, 
+                                SplitPos = v.IndexOf('=')
+                            })
+                        .ToArray();
+
+                    var wrongFormatLabelLines = lines
+                        .Where(l => l.SplitPos < 0)
+                        .ToArray();
+
+                    if (wrongFormatLabelLines.Length > 0)
+                    {
+                        throw new FormatException("Labels substring has wrong format")
+                            .AndFactIs("labels-substring", labelsSubstring)
+                            .AndFactIs("wrong-labels", wrongFormatLabelLines.Select(l => l.Value));
+                    }
+
+                    var labels = lines
                         .ToDictionary(
                             v => v.Value.Remove(v.SplitPos).Trim(),
                             v => v.Value.Substring(v.SplitPos + 1).Trim('\"', ' '));
