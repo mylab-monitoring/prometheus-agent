@@ -62,6 +62,24 @@ namespace UnitTests
         }
 
         [Fact]
+        public async Task ShouldReadEscaped()
+        {
+            //Arrange
+            var reader = new StringReader("foo_metric{label1=\"value1\",label2=\"value\\\"2\"} 1.1");
+            
+            //Act
+            var metric = await MetricModel.ReadAsync(reader);
+
+
+            //Assert
+            Assert.Equal("foo_metric", metric.Name);
+            Assert.Equal(2, metric.Labels.Count);
+            Assert.Equal("value1", metric.Labels["label1"]);
+            Assert.Equal("value\"2", metric.Labels["label2"]);
+            Assert.Equal(1.1d, metric.Value);
+        }
+
+        [Fact]
         public async Task ShouldReadMetricsWithoutBody()
         {
             //Arrange
@@ -100,6 +118,23 @@ namespace UnitTests
         {
             //Arrange
             var realMetricsString = await File.ReadAllTextAsync("docker-peeker-metrics.txt");
+            var rdr = new StringReader(realMetricsString);
+
+            //Act
+            while (rdr.Peek() != -1)
+            {
+                await MetricModel.ReadAsync(rdr);
+            }
+
+            //Assert
+
+        }
+
+        [Fact]
+        public async Task ShouldParseCrazyMetrics()
+        {
+            //Arrange
+            var realMetricsString = await File.ReadAllTextAsync("crazy-metrics.txt");
             var rdr = new StringReader(realMetricsString);
 
             //Act
