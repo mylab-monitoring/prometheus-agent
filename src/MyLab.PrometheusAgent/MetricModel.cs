@@ -121,7 +121,7 @@ namespace MyLab.PrometheusAgent
                 }
 
                 var labelsStart = bodyString.IndexOf('{');
-                var labelsEnd = bodyString.IndexOf('}');
+                var labelsEnd = bodyString.LastIndexOf('}');
 
                 if (labelsStart != -1 && labelsEnd != -1)
                 {
@@ -141,6 +141,15 @@ namespace MyLab.PrometheusAgent
                         throw new FormatException("Labels parsing error", e)
                             .AndFactIs("labels-substring", labelsSubstring);
                     }
+
+                    var duplicates = labels.GroupBy(l => l.Name)
+                        .Where(g => g.Count() > 1)
+                        .Select(g => g.Key)
+                        .ToArray();
+
+                    if (duplicates.Length > 0)
+                        throw new FormatException("Label duplicates found")
+                            .AndFactIs("keys", string.Join(',', duplicates));
 
                     metric.Labels = new ReadOnlyDictionary<string, string>(
                         labels.ToDictionary(l=>l.Name, l=> l.Value));

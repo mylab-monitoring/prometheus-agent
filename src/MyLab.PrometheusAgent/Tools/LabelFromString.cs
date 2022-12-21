@@ -31,9 +31,12 @@ namespace MyLab.PrometheusAgent.Tools
             if (firstQuotes != -1 && firstQuotes != '\"')
                 valueBuilder.Append((char)firstQuotes);
 
-            while ((ch = reader.Read()) != -1 && ch != '\"')
+            char? prevCh = null;
+            while ((ch = reader.Read()) != -1 && !(ch == '\"' && prevCh is not '\\'))
             {
                 valueBuilder.Append((char)ch);
+
+                prevCh = (char)ch;
             }
 
             ReadTillSpace(reader);
@@ -44,7 +47,7 @@ namespace MyLab.PrometheusAgent.Tools
             return new LabelFromString
             {
                 Name = nameBuilder.ToString().Trim(),
-                Value = valueBuilder.ToString()
+                Value = StringEscape.Unescape(valueBuilder.ToString())
             };
         }
 

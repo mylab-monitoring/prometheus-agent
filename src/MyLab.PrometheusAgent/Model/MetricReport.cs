@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using MyLab.Log.Dsl;
+using MyLab.PrometheusAgent.Tools;
 
 namespace MyLab.PrometheusAgent.Model
 {
@@ -76,7 +77,7 @@ namespace MyLab.PrometheusAgent.Model
                         await writer.WriteAsync($"{item.Name} {{");
                         await writer.WriteAsync(
                             string.Join(",",
-                                itemValue.Labels.Select(l => $"{l.Key}=\"{l.Value}\"")
+                                itemValue.Labels.Select(l => $"{l.Key}=\"{StringEscape.Escape(l.Value)}\"")
                             ));
                         await writer.WriteAsync("} ");
                         await writer.WriteAsync(itemValue.Value.ToString("F2", CultureInfo.InvariantCulture));
