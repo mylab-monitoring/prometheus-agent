@@ -125,18 +125,24 @@ namespace MyLab.PrometheusAgent.Tools
                 Path = path
             }.Uri;
 
-            bool excludeContainerLabels = container.Labels.TryGetValue("ignore_container_labels", out var exclBoolStr) &&
+            bool isMetricHub = container.Labels.TryGetValue("is_metrics_hub", out var exclBoolStr) &&
                                           bool.TryParse(exclBoolStr, out var exclFlag) &&
                                           exclFlag;
 
+            Dictionary<string, string> newLabels;
 
-            var newLabels = excludeContainerLabels 
-                ? new Dictionary<string, string>()
-                : RetrieveLabels(cLabels);
+            if (isMetricHub)
+            {
+                newLabels = RetrieveLabels(cLabels);
 
-            newLabels.Add("instance", $"{normHost}:{port}");
-            newLabels.Add("container_name", normHost);
-            
+                newLabels.Add("instance", $"{normHost}:{port}");
+                newLabels.Add("container_name", normHost);
+            }
+            else
+            {
+                newLabels = new Dictionary<string, string>();
+            }
+
             return new ScrapeSourceDescription(url, newLabels, stateDescription);
         }
 
