@@ -125,18 +125,27 @@ namespace MyLab.PrometheusAgent.Tools
                 Path = path
             }.Uri;
 
-            var newLabels = RetrieveLabels(cLabels);
+            bool isMetricHub = container.Labels.TryGetValue("is_metrics_hub", out var exclBoolStr) &&
+                                          bool.TryParse(exclBoolStr, out var exclFlag) &&
+                                          exclFlag;
 
-            newLabels.Add("instance", $"{normHost}:{port}");
-            newLabels.Add("container_name", normHost);
-            
+            var newLabels = new Dictionary<string, string>();
+
+            if (!isMetricHub)
+            {
+                AddContainerLabels(cLabels, newLabels);
+
+                newLabels.Add("instance", $"{normHost}:{port}");
+                newLabels.Add("container_name", normHost);
+            }
+
+            AddAdditionalLabels(newLabels);
+
             return new ScrapeSourceDescription(url, newLabels, stateDescription);
         }
 
-        private Dictionary<string, string> RetrieveLabels(Dictionary<string, string> cLabels)
+        private void AddContainerLabels(Dictionary<string, string> cLabels, Dictionary<string, string> target)
         {
-            var newLabels = new Dictionary<string, string>();
-
             foreach (var l in cLabels)
             {
                 if (ExcludeLogic != null && ExcludeLogic.ShouldExcludeLabel(l.Key))
@@ -144,21 +153,22 @@ namespace MyLab.PrometheusAgent.Tools
 
                 if (l.Key.StartsWith("metrics_"))
                 {
-                    newLabels.Add(NormKey(l.Key.Substring(8)), l.Value);
+                    target.Add(NormKey(l.Key.Substring(8)), l.Value);
                 }
                 else
                 {
-                    newLabels.Add("container_label_" + NormKey(l.Key), l.Value.Replace('\"', '\''));
+                    target.Add("container_label_" + NormKey(l.Key), l.Value.Replace('\"', '\''));
                 }
             }
+        }
 
+        private void AddAdditionalLabels(Dictionary<string, string> target)
+        {
             if (AdditionalLabels != null)
             {
                 foreach (var l in AdditionalLabels)
-                    newLabels.Add(l.Key, l.Value);
+                    target.Add(l.Key, l.Value);
             }
-
-            return newLabels;
         }
 
         private static string RetrieveMetricPath(Dictionary<string, string> cLabels)

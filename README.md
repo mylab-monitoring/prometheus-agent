@@ -121,7 +121,7 @@ foo_metric {label1="value1",label2="value2",target_batch="1",instance="localhost
   * `Strategy` - [стратегия обнаружения](#Стратегии-обнаружения). `None` - по умолчанию.
   * `Socket` - путь к `docker`-сокету. По умолчанию: `unix:///var/run/docker.sock`;
   * `Labels` - именованные дополнительные метки для всех контейнеров;
-  * `DisableServiceContainerLabels` - флаг, указывающий на исключение служеюных меток из меток контенйера;
+  * `DisableServiceContainerLabels` - флаг, указывающий на исключение служебных меток из меток контейнера;
   * `ServiceLabelsWhiteList` - массив имён служебных меток, которые следует оставить при их общем исключении.
 
 ### Docker Discovery
@@ -173,8 +173,18 @@ foo_metric {label1="value1",label2="value2",target_batch="1",instance="localhost
 Исключению подвергаются метки:
 
 * `maintainer`
+* `metrics_exclude`
+* `metrics_include`          
+* `metrics_port`          
+* `metrics_path`
+* `is_metrics_hub`
 * `com.docker.compose.*`
 * `desktop.docker.*`
+* `org.opencontainers.*`
+
+#### Хаб метрик
+
+Какие-то контейнеры могут хостить сервисы, выступающие в роли хаба метрик и транслировать метрики других контейнеров. При этом такие метрики не должны снабжаться метками этого контейнера-хаба. Для этого необходимо пометить контейнер меткой `is_metrics_hub: true`
 
 ### File Discovery
 
