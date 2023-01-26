@@ -14,6 +14,7 @@ namespace MyLab.PrometheusAgent.Tools
         private static readonly string[] ServiceLabelsStartWith = new[]
         {
             "com.docker.compose.",
+            "org.opencontainers.",
             "desktop.docker."
         };
         
