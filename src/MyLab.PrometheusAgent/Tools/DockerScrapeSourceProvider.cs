@@ -125,7 +125,14 @@ namespace MyLab.PrometheusAgent.Tools
                 Path = path
             }.Uri;
 
-            var newLabels = RetrieveLabels(cLabels);
+            bool excludeContainerLabels = container.Labels.TryGetValue("ignore_container_labels", out var exclBoolStr) &&
+                                          bool.TryParse(exclBoolStr, out var exclFlag) &&
+                                          exclFlag;
+
+
+            var newLabels = excludeContainerLabels 
+                ? new Dictionary<string, string>()
+                : RetrieveLabels(cLabels);
 
             newLabels.Add("instance", $"{normHost}:{port}");
             newLabels.Add("container_name", normHost);
