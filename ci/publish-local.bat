@@ -1,1 +1,1 @@
-docker build -f ./Dockerfile -t mylabtools/prometheus-agent:local ../src
+docker build -f ./Dockerfile -t ghcr.io/mylab-monitoring/prometheus-agent:local ../src

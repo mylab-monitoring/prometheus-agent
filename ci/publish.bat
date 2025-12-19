@@ -3,7 +3,7 @@ echo off
 IF [%1]==[] goto noparam
 
 echo "Build image '%1' and 'latest'..."
-docker build --progress plain -f ./Dockerfile -t mylabtools/prometheus-agent:%1 -t mylabtools/prometheus-agent:latest ../src
+docker build --progress plain -f ./Dockerfile -t ghcr.io/mylab-monitoring/prometheus-agent:%1 -t ghcr.io/mylab-monitoring/prometheus-agent:latest ../src
 
 echo "Publish image '%1' ..."
 docker push mylabtools/prometheus-agent:%1
